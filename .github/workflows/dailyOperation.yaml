@@ -1,0 +1,13 @@
+name: dailyOperation
+
+on: 
+  schedule: 
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+
+jobs:
+  my-job:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: first step
+        run: echo "hello world"
