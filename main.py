@@ -15,9 +15,13 @@ from firebase_admin.exceptions import FirebaseError
 # Get the credentials JSON string from the environment variable
 firebase_creds_json = os.getenv("FIREBASE_SECRET_KEY")
 
-# Convert the string to a dictionary
-cred = json.loads(firebase_creds_json)
+# Convert the JSON string to a dict
+creds_dict = json.loads(firebase_creds_json)
 
+# Create a credentials.Certificate object from the dict
+cred = credentials.Certificate(creds_dict)
+
+# Initialize Firebase app only if not already initialized
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
