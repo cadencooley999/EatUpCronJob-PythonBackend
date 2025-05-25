@@ -4,7 +4,7 @@ import json
 import re
 import os
 import concurrent.futures
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 from openStatusScrape import *
 from menuScrape import getDailyMenu
@@ -239,31 +239,30 @@ def dailyMenuOperation(date):
 def dailyNotificationOperation():
     send_notifications()
 
-def dailyHoursOperation():
-    today = datetime.now().date()
-    formatted_date = today.strftime("%Y-%m-%d")
+def dailyHoursOperation(date):
     # Change for
-    setWeeklyHours(location="commons", date="2025-2-28")
+    setWeeklyHours(location="commons", date=f"{date}")
 
-def dailyRatingOperation():
+def dailyRatingOperation(date):
     pastRatings = getPastRatings()
     currentRatings = getCurrentRating()
     newPastRatings = {'3dayPast': pastRatings["2dayPast"], '2dayPast': pastRatings["1dayPast"], '4dayPast': pastRatings["3dayPast"], '5dayPast': pastRatings["4dayPast"], '1dayPast': currentRatings["dailyAvg"], '6dayPast': pastRatings["5dayPast"]}
     newCurrentRatings = {'numDailyRatings': 0, 'lastRating': '2025-04-19T11:57:52-05:00', 'crowdScore': 0.5, 'tasteScore': 0.5, 'numRatings': 0, 'diningScore': 0.5, 'abundanceScore': 0.5, 'dailyAvg': 0.5}
     try: 
+        db.collection("Ratings").document("CurrentDay").set({"date" : convert_to_firestore_timestamp(date)})
         db.collection("Ratings").document("CurrentRatings").set(newCurrentRatings)
         db.collection("Ratings").document("WeeklyAvgScores").set(newPastRatings)
     except:
         print("Error with Ratings")
 
 def dailyOperation():
-    date = '2025-4-18'
+    date = dateIterator()
     try:
         dailyMenuOperation(date)
     except:
         print('Error getting menus')
     try:
-        dailyRatingOperation()
+        dailyRatingOperation(date)
     except:
         print('Error with ratings')
     try:
@@ -271,12 +270,21 @@ def dailyOperation():
     except:
         print('Error with notifications')
     try:
-        dailyHoursOperation()
+        dailyHoursOperation(date)
     except:
-        print('Error with hours')     
+        print('Error with hours')
+
+def dateIterator():
+    today = datetime.now()
+    eight_weeks_ago = today - timedelta(weeks=8)
+    formatted_date = eight_weeks_ago.strftime("%Y-%m-%d")
+    return formatted_date
+
+def convert_to_firestore_timestamp(date_str):
+    # Parse the string to a datetime object
+    dt = datetime.strptime(date_str, "%Y-%m-%d")
+
+    # Firestore can accept Python datetime objects directly
+    return dt
 
 dailyOperation()
-
-# hoursData = {"M-Th": "7:00-3:30, 4:00-10:00", "Sun": "10:00-2:00, 4:00-10:00", "Sat": "10:00-2:00, 4:00-8:00", "Fri":"7:00-3:30, 4:00-8:00"}
-
-# open_ref.set(hoursData)
