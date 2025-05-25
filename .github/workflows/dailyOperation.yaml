@@ -26,8 +26,8 @@ jobs:
 
       - name: Install Playwright browsers
         run: playwright install
-        
+
       - name: Run Python script
         env:
-          Firebase_Secret_Key: ${{ secrets.FIREBASE_SECRET_KEY }}
+          FIREBASE_SECRET_KEY: ${{ secrets.FIREBASE_SECRET_KEY }}
         run: python main.py

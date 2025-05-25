@@ -12,9 +12,6 @@ from MenuItem import MenuItem
 from firebase_admin import credentials, messaging, firestore
 from firebase_admin.exceptions import FirebaseError
 
-
-# Notes for caden 
-
 # Get the credentials JSON string from the environment variable
 firebase_creds_json = os.getenv("FIREBASE_SECRET_KEY")
 
