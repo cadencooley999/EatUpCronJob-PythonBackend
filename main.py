@@ -30,17 +30,6 @@ db = firestore.client()
 open_ref = db.collection("OpenStatus").document("Commons")
 items_menu_ref = db.collection("Items")
 
-with open('sampleJsonBreakfast2.json') as f:
-    BData = json.load(f)
-    
-with open('sampleJsonLunch2.json') as f:
-    LData = json.load(f)
-
-with open('sampleJsonDinner2.json') as f:
-    DData = json.load(f)
-
-BrData = []
-
 def send_notification_batch(notifications):
     """Send multiple notifications in parallel using ThreadPoolExecutor"""
     success_count = 0
