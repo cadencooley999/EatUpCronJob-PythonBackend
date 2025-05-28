@@ -136,22 +136,18 @@ def send_notifications():
     print(f"Execution completed in {end_time - start_time:.2f} seconds")
 
 def getKeywords(str1, str2, str3):
-    # Combine and clean up input
-    combined = f"{str1} {str2} {str3}"
-    combined = re.sub(r'[^\w\s]', '', combined.lower())
-    
-    # Split into words
-    words = combined.split()
-    
-    # Now build prefixes for each word
+    def generate_prefixes(text):
+        text = re.sub(r'[^\w\s]', '', text.lower())  # clean text
+        prefixes = set()
+        for i in range(1, len(text) + 1):
+            prefixes.add(text[:i])
+        return prefixes
+
     keywords = set()
-    
-    for word in words:
-        for i in range(1, len(word) + 1):
-            prefix = word[:i]
-            keywords.add(prefix)
-    
-    return list(keywords)
+    for s in [str1, str2, str3]:
+        keywords.update(generate_prefixes(s))
+
+    return sorted(list(keywords))
 
 def getPastRatings():
     doc_ref = db.collection("Ratings").document("WeeklyAvgScores")
