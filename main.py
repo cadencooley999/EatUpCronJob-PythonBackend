@@ -183,10 +183,25 @@ def setWeeklyHours(location, date):
         print("Error with hours")
 
 def todayTomorrowUpdate():
-    docs = db.collection('Items').where('tomorrow', '==', 'True').stream()
+    docs = db.collection('Items').where('today', '==', 'True').where('tomorrow', '==', 'False').stream()
     batch = db.batch()
     count = 0
     total_updated = 0
+
+    for doc in docs:
+        batch.update(doc.reference, {'today': 'False'})
+        count += 1
+        total_updated += 1
+        
+        if count == 500:
+            batch.commit()
+            batch = db.batch()
+            count = 0
+    
+    if count > 0:
+        batch.commit()
+
+    docs = db.collection('Items').where('tomorrow', '==', 'True').stream()
 
     for doc in docs:
         batch.update(doc.reference, {
@@ -216,9 +231,9 @@ def updateFirebase(date):
         doc_ref = collection_ref.document(item.id)
 
         data = item.toJson()
+        del data['today']
         data['lastSeen'] = '2025-05-20T20:01:32Z'
         data['keywords'] = getKeywords(item.name, item.category, item.period)
-
         batch.set(doc_ref, data, merge=True)
 
         if (index + 1) % 500 == 0:
