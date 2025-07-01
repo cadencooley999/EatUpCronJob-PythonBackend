@@ -81,6 +81,8 @@ def send_notifications():
     notifications = []
     user_count = 0
     
+    print("num users", len(users_snapshot))
+
     for user_doc in users_snapshot:
         user_data = user_doc.to_dict()
         user_id = user_doc.id
@@ -90,8 +92,12 @@ def send_notifications():
         
         user_token = user_data['fcmToken']
         favorite_items = user_data.get('favorites', [])
+
+        print("users fav items", favorite_items)
         
         available_favorites = [item_id for item_id in favorite_items if item_id in today_item_ids]
+        
+        print("fav available", available_favorites)
         
         if not available_favorites:
             continue
