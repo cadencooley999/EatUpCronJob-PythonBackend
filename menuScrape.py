@@ -74,4 +74,8 @@ def getDailyMenu(date):
         finalItems.extend(getMenuFromPeriod(per, date))
     return finalItems
 
-# finalItems = getDailyMenu('2025-4-15')
+finalItems = getDailyMenu('2025-4-18')
+for i in finalItems:
+    if i.period == "Brunch":
+        print(i.name)
+print(len(finalItems))
