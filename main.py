@@ -84,8 +84,8 @@ def send_notifications():
     for user_doc in users_snapshot:
         user_data = user_doc.to_dict()
         user_id = user_doc.id
-        
-        if 'fcmToken' not in user_data or 'favorites' not in user_data or user_data.get('dailyFavsNotificationsEnabled') != False:
+        #  or user_data.get('dailyFavsNotificationsEnabled') != False
+        if 'fcmToken' not in user_data or 'favorites' not in user_data:
             continue
         
         user_token = user_data['fcmToken']
@@ -297,5 +297,6 @@ def convert_to_firestore_timestamp(date_str):
 
     # Firestore can accept Python datetime objects directly
     return dt
+
 
 dailyOperation()
