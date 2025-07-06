@@ -287,8 +287,8 @@ def dailyOperation():
 
 def dateIterator():
     today = datetime.now()
-    thirtytwo_weeks_ago = today - timedelta(weeks=32)
-    formatted_date = thirtytwo_weeks_ago.strftime("%Y-%m-%d")
+    twenty_weeks_ago = today - timedelta(weeks=20)
+    formatted_date = twenty_weeks_ago.strftime("%Y-%m-%d")
     return formatted_date
 
 def convert_to_firestore_timestamp(date_str):
