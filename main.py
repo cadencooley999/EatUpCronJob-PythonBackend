@@ -287,7 +287,7 @@ def dailyOperation():
 
 def dateIterator():
     today = datetime.now()
-    twenty_weeks_ago = today - timedelta(weeks=16)
+    twenty_weeks_ago = today - timedelta(weeks=12)
     formatted_date = twenty_weeks_ago.strftime("%Y-%m-%d")
     return formatted_date
 
