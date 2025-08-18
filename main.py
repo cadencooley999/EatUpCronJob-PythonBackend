@@ -238,7 +238,6 @@ def mergeItems(list1, list2):
 
 def updateFirebase(date):
     items = getDailyMenu(date)
-    print("THESE ARE THE ITEMS", items)
     # harrisItems = getDailyHarrisMenu(date)
     # print("Harris Items")
     # allItems = mergeItems(items1=items, items2=harrisItems)
@@ -249,9 +248,10 @@ def updateFirebase(date):
     for index, item in enumerate(items):
         doc_ref = collection_ref.document(item.id)
 
+        print(item.name)
+
         data = item.toJson()
         del data['today']
-        del data['harrisToday']
         data['lastSeen'] = '2025-05-20T20:01:32Z'
         data['keywords'] = getKeywords(item.name, item.category, item.period)
         batch.set(doc_ref, data, merge=True)
