@@ -44,6 +44,7 @@ def getMenuFromPeriod(period, date):
     #     BData = json.load(f)
     # response = {}
     # response['data'] = BData
+    print(response['data']['menu']['periods']['name'])
     periodName = response['data']['menu']['periods']['name']
     cats = response['data']['menu']['periods']['categories']
     for cat in cats:

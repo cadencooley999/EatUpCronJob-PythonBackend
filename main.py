@@ -9,6 +9,7 @@ from collections import defaultdict
 from openStatusScrape import *
 from menuScrape import getDailyMenu
 from MenuItem import MenuItem
+from MenuItem import getDailyHarrisMenu
 from firebase_admin import credentials, messaging, firestore
 from firebase_admin.exceptions import FirebaseError
 
@@ -174,6 +175,7 @@ def getCurrentRating():
 def setWeeklyHours(location, date):
     weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     hours = getWeeklyHours(location, date)
+    print("Hours", hours)
     finalDict = {}
     for i in hours:
         finalDict[f"{weekdays[i["day"]]}"] = i['hours']
@@ -236,7 +238,7 @@ def mergeItems(list1, list2):
 
 def updateFirebase(date):
     items = getDailyMenu(date)
-    print(items)
+    print("THESE ARE THE ITEMS", items)
     harrisItems = getDailyHarrisMenu(date)
     print("Harris Items")
     allItems = mergeItems(items1=items, items2=harrisItems)

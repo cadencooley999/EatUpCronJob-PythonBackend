@@ -104,7 +104,9 @@ def get_dining_api_response(api_url, max_attempts=5):
     
 def getWeeklyHours(location, date):
 
-    codes = {'commons' : '5879069fee596f31b3dc146a', 'Harris' : '58790871ee596f31bcdc174d', 'LBJ Marketplace' : '5f4d9a563a585b186379d814'}
+    print(f"trying to get hours for {location}")
+
+    codes = {'Commons' : '5879069fee596f31b3dc146a', 'Harris' : '58790871ee596f31bcdc174d', 'LBJ Marketplace' : '5f4d9a563a585b186379d814'}
     url = f'https://api.dineoncampus.com/v1/locations/weekly_schedule?site_id=576837c0e551b89aabc83157&date={date}T05:00:00.000Z'
 
     success, response = get_dining_api_response(url)
@@ -128,6 +130,7 @@ def getWeeklyHours(location, date):
             if loc["id"] == codes[location]:
                 selectedLocation = loc
         week = selectedLocation['week']
+        print(selectedLocation["week"])
         result = []
         for item in week:
             day = item['day']
