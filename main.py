@@ -9,7 +9,7 @@ from collections import defaultdict
 from openStatusScrape import *
 from menuScrape import getDailyMenu
 from MenuItem import MenuItem
-from MenuItem import getDailyHarrisMenu
+from menuScrape import getDailyHarrisMenu
 from firebase_admin import credentials, messaging, firestore
 from firebase_admin.exceptions import FirebaseError
 
