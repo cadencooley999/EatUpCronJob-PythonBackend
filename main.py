@@ -239,9 +239,9 @@ def mergeItems(list1, list2):
 def updateFirebase(date):
     items = getDailyMenu(date)
     print("THESE ARE THE ITEMS", items)
-    harrisItems = getDailyHarrisMenu(date)
-    print("Harris Items")
-    allItems = mergeItems(items1=items, items2=harrisItems)
+    # harrisItems = getDailyHarrisMenu(date)
+    # print("Harris Items")
+    # allItems = mergeItems(items1=items, items2=harrisItems)
     # items = [MenuItem(name="Test", calories=34, period="Breakfast", protein=90, category="MainLine", today='False', tomorrow="True")]
     batch = db.batch()
     collection_ref = db.collection('Items')
