@@ -184,41 +184,81 @@ def setWeeklyHours(location, date):
     except:
         print("Error with hours")
 
-def commit_in_batches(docs, update_fn):
+def todayTomorrowUpdate():
+    docs = db.collection('Items').where('today', '==', 'True').where('tomorrow', '==', 'False').stream()
     batch = db.batch()
     count = 0
+    total_updated = 0
+
     for doc in docs:
-        update_fn(batch, doc)
+        batch.update(doc.reference, {'today': 'False'})
         count += 1
+        total_updated += 1
+        
         if count == 500:
             batch.commit()
             batch = db.batch()
             count = 0
+    
     if count > 0:
         batch.commit()
 
-def todayTomorrowUpdate():
-    # Step 1: today=True & tomorrow=False -> today=False
-    docs = db.collection('Items').where('today', '==', True).where('tomorrow', '==', False).stream()
-    commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {'today': False}))
+    docs = db.collection('Items').where('tomorrow', '==', 'True').stream()
 
-    # Step 2: tomorrow=True -> today=True, tomorrow=False
-    docs = db.collection('Items').where('tomorrow', '==', True).stream()
-    commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {
-        'today': True,
-        'tomorrow': False
-    }))
+    for doc in docs:
+        batch.update(doc.reference, {
+            'tomorrow': 'False',
+            'today': 'True'
+        })
+        count += 1
+        total_updated += 1
 
-    # # Step 3: harrisToday=True & harrisTomorrow=False -> harrisToday=False
-    # docs = db.collection('Items').where('harrisToday', '==', True).where('harrisTomorrow', '==', False).stream()
-    # commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {'harrisToday': False}))
+        # Commit in batches of 500
+        if count == 500:
+            batch.commit()
+            batch = db.batch()
+            count = 0
 
-    # # Step 4: harrisTomorrow=True -> harrisToday=True, harrisTomorrow=False
-    # docs = db.collection('Items').where('harrisTomorrow', '==', True).stream()
-    # commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {
-    #     'harrisToday': True,
-    #     'harrisTomorrow': False
-    # }))
+    # Commit any remaining documents
+    if count > 0:
+        batch.commit()
+
+
+# def commit_in_batches(docs, update_fn):
+#     batch = db.batch()
+#     count = 0
+#     for doc in docs:
+#         update_fn(batch, doc)
+#         count += 1
+#         if count == 500:
+#             batch.commit()
+#             batch = db.batch()
+#             count = 0
+#     if count > 0:
+#         batch.commit()
+
+# def todayTomorrowUpdate():
+#     # Step 1: today=True & tomorrow=False -> today=False
+#     docs = db.collection('Items').where('today', '==', True).where('tomorrow', '==', False).stream()
+#     commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {'today': False}))
+
+#     # Step 2: tomorrow=True -> today=True, tomorrow=False
+#     docs = db.collection('Items').where('tomorrow', '==', True).stream()
+#     commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {
+#         'today': True,
+#         'tomorrow': False
+#     }))
+
+#     # # Step 3: harrisToday=True & harrisTomorrow=False -> harrisToday=False
+#     # docs = db.collection('Items').where('harrisToday', '==', True).where('harrisTomorrow', '==', False).stream()
+#     # commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {'harrisToday': False}))
+
+#     # # Step 4: harrisTomorrow=True -> harrisToday=True, harrisTomorrow=False
+#     # docs = db.collection('Items').where('harrisTomorrow', '==', True).stream()
+#     # commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {
+#     #     'harrisToday': True,
+#     #     'harrisTomorrow': False
+#     # }))
 
 def mergeItems(list1, list2):
     merged = {}
