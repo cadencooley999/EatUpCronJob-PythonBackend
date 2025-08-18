@@ -178,51 +178,66 @@ def setWeeklyHours(location, date):
     for i in hours:
         finalDict[f"{weekdays[i["day"]]}"] = i['hours']
     try:
-        db.collection("OpenStatus").document("Commons").set(finalDict)
+        db.collection("OpenStatus").document(location).set(finalDict)
     except:
         print("Error with hours")
 
-def todayTomorrowUpdate():
-    docs = db.collection('Items').where('today', '==', 'True').where('tomorrow', '==', 'False').stream()
+def commit_in_batches(docs, update_fn):
     batch = db.batch()
     count = 0
-    total_updated = 0
-
     for doc in docs:
-        batch.update(doc.reference, {'today': 'False'})
+        update_fn(batch, doc)
         count += 1
-        total_updated += 1
-        
         if count == 500:
             batch.commit()
             batch = db.batch()
             count = 0
+    if count > 0:
+        batch.commit()
+
+def todayTomorrowUpdate():
+    # Step 1: today=True & tomorrow=False -> today=False
+    docs = db.collection('Items').where('today', '==', True).where('tomorrow', '==', False).stream()
+    commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {'today': False}))
+
+    # Step 2: tomorrow=True -> today=True, tomorrow=False
+    docs = db.collection('Items').where('tomorrow', '==', True).stream()
+    commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {
+        'today': True,
+        'tomorrow': False
+    }))
+
+    # # Step 3: harrisToday=True & harrisTomorrow=False -> harrisToday=False
+    # docs = db.collection('Items').where('harrisToday', '==', True).where('harrisTomorrow', '==', False).stream()
+    # commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {'harrisToday': False}))
+
+    # # Step 4: harrisTomorrow=True -> harrisToday=True, harrisTomorrow=False
+    # docs = db.collection('Items').where('harrisTomorrow', '==', True).stream()
+    # commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {
+    #     'harrisToday': True,
+    #     'harrisTomorrow': False
+    # }))
+
+def mergeItems(list1, list2):
+    merged = {}
     
-    if count > 0:
-        batch.commit()
+    for item in list1 + list2:
+        if item.id not in merged:
+            # First time seeing this ID, store it
+            merged[item.id] = item
+        else:
+            # Merge logic
+            existing = merged[item.id]
+            existing.tomorrow = existing.tomorrow or item.tomorrow
+            existing.harrisTomorrow = existing.harrisTomorrow or item.harrisTomorrow
+            # Optional: If you'd like to combine other fields or prefer one version, handle that here
 
-    docs = db.collection('Items').where('tomorrow', '==', 'True').stream()
-
-    for doc in docs:
-        batch.update(doc.reference, {
-            'tomorrow': 'False',
-            'today': 'True'
-        })
-        count += 1
-        total_updated += 1
-
-        # Commit in batches of 500
-        if count == 500:
-            batch.commit()
-            batch = db.batch()
-            count = 0
-
-    # Commit any remaining documents
-    if count > 0:
-        batch.commit()
+    return list(merged.values())
 
 def updateFirebase(date):
     items = getDailyMenu(date)
+    harrisItems = getDailyHarrisMenu(date)
+    allItems = mergeItems(items1=items, items2=harrisItems)
     # items = [MenuItem(name="Test", calories=34, period="Breakfast", protein=90, category="MainLine", today='False', tomorrow="True")]
     batch = db.batch()
     collection_ref = db.collection('Items')
@@ -232,6 +247,7 @@ def updateFirebase(date):
 
         data = item.toJson()
         del data['today']
+        del data['harrisToday']
         data['lastSeen'] = '2025-05-20T20:01:32Z'
         data['keywords'] = getKeywords(item.name, item.category, item.period)
         batch.set(doc_ref, data, merge=True)
@@ -252,7 +268,8 @@ def dailyNotificationOperation():
 
 def dailyHoursOperation(date):
     # Change for
-    setWeeklyHours(location="commons", date=f"{date}")
+    setWeeklyHours(location="Commons", date=f"{date}")
+    setWeeklyHours(location="Harris", date=f"{date}")
 
 def dailyRatingOperation(date):
     pastRatings = getPastRatings()

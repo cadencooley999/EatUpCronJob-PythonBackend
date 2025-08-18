@@ -24,7 +24,15 @@ def getOgUrl(date):
     ogurl = f"https://api.dineoncampus.com/v1/location/5879069fee596f31b3dc146a/periods?platform=0&date={date}"
     return ogurl
 
+def getHarrisOgUrl(date):
+    ogurl = f"https://api.dineoncampus.com/v1/location/5879069fee596f31b3dc146a/periods?platform=0&date={date}"
+    return ogurl
+
 def getMenuUrl(perCode, date, locCode='5879069fee596f31b3dc146a'):
+    url = f"https://api.dineoncampus.com/v1/location/{locCode}/periods/{perCode}?platform=0&date={date}"
+    return url
+
+def getHarrisMenuUrl(perCode, date, locCode='58790871ee596f31bcdc174d'):
     url = f"https://api.dineoncampus.com/v1/location/{locCode}/periods/{perCode}?platform=0&date={date}"
     return url
 
@@ -44,7 +52,43 @@ def getMenuFromPeriod(period, date):
             calories = next((nut for nut in item["nutrients"] if 'Calories' in nut['name']), None)
             protein = next((nut for nut in item["nutrients"] if 'Protein' in nut['name']), None)
             items.append(
-                MenuItem(name=item['name'], calories=calories['value'], protein=protein['value'], today=False, tomorrow=True, category=cat["name"], period=periodName)
+                MenuItem(name=item['name'], calories=calories['value'], protein=protein['value'], today=False, tomorrow=True, harrisToday=False, harrisTomorrow=False, category=cat["name"], period=periodName)
+            )
+        finalItems.extend(items)
+    return finalItems
+
+def getHarrisMenuFromPeriod(period, date):
+    finalItems = []
+    url = getHarrisMenuUrl(period, date)
+    success, response = get_dining_api_response(url)
+    # with open('sampleJsonBreakfast2.json') as f:
+    #     BData = json.load(f)
+    # response = {}
+    # response['data'] = BData
+    periodName = response['data']['menu']['periods']['name']
+    cats = response['data']['menu']['periods']['categories']
+    for cat in cats:
+        items = []
+        for item in cat['items']:
+            calories = next((nut for nut in item["nutrients"] if 'Calories' in nut['name']), None)
+            protein = next((nut for nut in item["nutrients"] if 'Protein' in nut['name']), None)
+            items.append(
+                MenuItem(name=item['name'], calories=calories['value'], protein=protein['value'], today=False, tomorrow=False, harrisToday=False, harrisTomorrow=True, category=cat["name"], period=periodName)
+            )
+        finalItems.extend(items)
+    return finalItems
+
+def getHarrisFirstMenu(response):
+    finalItems = []
+    periodName = response['data']['menu']['periods']['name']
+    cats = response['data']['menu']['periods']['categories']
+    for cat in cats:
+        items = []
+        for item in cat['items']:
+            calories = next((nut for nut in item["nutrients"] if 'Calories' in nut['name']), None)
+            protein = next((nut for nut in item["nutrients"] if 'Protein' in nut['name']), None)
+            items.append(
+                MenuItem(name=item['name'], calories=calories['value'], protein=protein['value'], today=False, tomorrow=True, harrisToday=False, harrisTomorrow=True, category=cat["name"], period=periodName)
             )
         finalItems.extend(items)
     return finalItems
@@ -59,7 +103,7 @@ def getFirstMenu(response):
             calories = next((nut for nut in item["nutrients"] if 'Calories' in nut['name']), None)
             protein = next((nut for nut in item["nutrients"] if 'Protein' in nut['name']), None)
             items.append(
-                MenuItem(name=item['name'], calories=calories['value'], protein=protein['value'], today=False, tomorrow=True, category=cat["name"], period=periodName)
+                MenuItem(name=item['name'], calories=calories['value'], protein=protein['value'], today=False, tomorrow=True, harrisToday=False, harrisTomorrow=False, category=cat["name"], period=periodName)
             )
         finalItems.extend(items)
     return finalItems
@@ -72,4 +116,14 @@ def getDailyMenu(date):
     periods.remove(response['data']['menu']['periods']['id'])
     for per in periods:
         finalItems.extend(getMenuFromPeriod(per, date))
+    return finalItems
+
+def getDailyHarrisMenu(date):
+    finalItems = []
+    success, response = get_dining_api_response(getHarrisOgUrl(date))
+    finalItems.extend(getHarrisFirstMenu(response))
+    periods = [per['id'] for per in response['data']['periods']]
+    periods.remove(response['data']['menu']['periods']['id'])
+    for per in periods:
+        finalItems.extend(getHarrisMenuFromPeriod(per, date))
     return finalItems

@@ -6,13 +6,15 @@ def getItemId(name, period, calories, category):
 
 class MenuItem:
 
-    def __init__(self, name, calories, protein, today, tomorrow, category, period):
+    def __init__(self, name, calories, protein, today, tomorrow, harrisToday, harrisTomorrow, category, period):
         self.id = getItemId(name, period, calories, category)
         self.name = name
         self.calories = calories
         self.protein = protein
         self.today = today
         self.tomorrow = tomorrow
+        self.harrisToday = harrisToday
+        self.harrisTomorrow = harrisTomorrow
         self.category = category
         self.period = period
 
@@ -24,6 +26,8 @@ class MenuItem:
             "protein" : self.protein,
             "today" : str(self.today),
             "tomorrow" : str(self.tomorrow),
+            "harrisToday" : str(self.harrisToday),
+            "harrisTomorrow" : str(self.harrisTomorrow),
             "category" : self.category,
             "period" : self.period
         }
