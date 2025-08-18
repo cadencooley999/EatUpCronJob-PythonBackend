@@ -348,7 +348,7 @@ def dailyOperation():
 
 def dateIterator():
     today = datetime.now()
-    timewewant = today-timedelta(hours=24)
+    timewewant = today
     formatted_date = timewewant.strftime("%Y-%m-%d")
     return formatted_date
 
