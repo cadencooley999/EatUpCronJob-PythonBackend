@@ -186,6 +186,8 @@ def todayTomorrowUpdate():
     count = 0
     total_updated = 0
 
+    print("First TT")
+
     for doc in docs:
         batch.update(doc.reference, {'today': 'False'})
         count += 1
@@ -200,6 +202,8 @@ def todayTomorrowUpdate():
         batch.commit()
 
     docs = db.collection('Items').where('tomorrow', '==', 'True').stream()
+
+    print("Second TT")
 
     for doc in docs:
         batch.update(doc.reference, {
@@ -218,42 +222,49 @@ def todayTomorrowUpdate():
     # Commit any remaining documents
     if count > 0:
         batch.commit()
+    
+    docs = db.collection('Items').where('harrisToday', '==', 'True').where('harrisTomorrow', '==', 'False').stream()
 
-# def commit_in_batches(docs, update_fn):
-#     batch = db.batch()
-#     count = 0
-#     for doc in docs:
-#         update_fn(batch, doc)
-#         count += 1
-#         if count == 500:
-#             batch.commit()
-#             batch = db.batch()
-#             count = 0
-#     if count > 0:
-#         batch.commit()
+    print("Third TT")
 
-# def todayTomorrowUpdate():
-#     # Step 1: today=True & tomorrow=False -> today=False
-#     docs = db.collection('Items').where('today', '==', True).where('tomorrow', '==', False).stream()
-#     commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {'today': False}))
+    for doc in docs:
+        batch.update(doc.reference, {
+            'today': 'False'
+        })
+        count += 1
+        total_updated += 1
 
-#     # Step 2: tomorrow=True -> today=True, tomorrow=False
-#     docs = db.collection('Items').where('tomorrow', '==', True).stream()
-#     commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {
-#         'today': True,
-#         'tomorrow': False
-#     }))
+        # Commit in batches of 500
+        if count == 500:
+            batch.commit()
+            batch = db.batch()
+            count = 0
 
-#     # # Step 3: harrisToday=True & harrisTomorrow=False -> harrisToday=False
-#     # docs = db.collection('Items').where('harrisToday', '==', True).where('harrisTomorrow', '==', False).stream()
-#     # commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {'harrisToday': False}))
+    # Commit any remaining documents
+    if count > 0:
+        batch.commit()
 
-#     # # Step 4: harrisTomorrow=True -> harrisToday=True, harrisTomorrow=False
-#     # docs = db.collection('Items').where('harrisTomorrow', '==', True).stream()
-#     # commit_in_batches(docs, lambda batch, doc: batch.update(doc.reference, {
-#     #     'harrisToday': True,
-#     #     'harrisTomorrow': False
-#     # }))
+    docs = db.collection('Items').where('harrisTomorrow', '==', 'True').stream()
+
+    print("Fourth TT")
+
+    for doc in docs:
+        batch.update(doc.reference, {
+            'harrisTomorrow': 'False',
+            'harrisToday': 'True'
+        })
+        count += 1
+        total_updated += 1
+
+        # Commit in batches of 500
+        if count == 500:
+            batch.commit()
+            batch = db.batch()
+            count = 0
+
+    # Commit any remaining documents
+    if count > 0:
+        batch.commit()
 
 def mergeItems(list1, list2):
     merged = {}
@@ -274,7 +285,10 @@ def mergeItems(list1, list2):
 def updateFirebase(date):
     itemsC = getCommonsDailyMenu(date)
     itemsH = getHarrisDailyMenu(date)
-    allItems = mergeItems(items1=itemsC, items2=itemsH)
+    print("Commons: ",len(itemsC))
+    print("Harris: ",len(itemsH))
+    allItems = mergeItems(list1=itemsC, list2=itemsH)
+    print("all items length: ", len(allItems))
     batch = db.batch()
     collection_ref = db.collection('Items')
     for index, item in enumerate(allItems):
@@ -293,8 +307,14 @@ def updateFirebase(date):
         batch.commit()
 
 def dailyMenuOperation(date):
-    todayTomorrowUpdate()
-    updateFirebase(date)
+    try: 
+        todayTomorrowUpdate()
+    except:
+        print("error with today tomorrow")
+    try: 
+        updateFirebase(date)
+    except:
+        print("error updating firebsase")
 
 def dailyNotificationOperation():
     send_notifications()
@@ -317,13 +337,13 @@ def dailyRatingOperation(date):
         print("Error with Ratings")
 
 def dailyOperation():
-    date = dateIterator()
+    todaysDate, tomorrowsDate = dateIterator()
     try:
-        dailyMenuOperation(date)
+        dailyMenuOperation(tomorrowsDate)
     except:
         print('Error getting menus')
     try:
-        dailyRatingOperation(date)
+        dailyRatingOperation(todaysDate)
     except:
         print('Error with ratings')
     try:
@@ -331,15 +351,16 @@ def dailyOperation():
     except:
         print('Error with notifications')
     try:
-        dailyHoursOperation(date)
+        dailyHoursOperation(todaysDate)
     except:
         print('Error with hours')
 
 def dateIterator():
-    today = datetime.now() + timedelta(hours=24)
+    today = datetime.now()
     timewewant = today
     formatted_date = timewewant.strftime("%Y-%m-%d")
-    return formatted_date
+    formatted_tomorrow = (today + timedelta(hours=24)).strftime("%Y-%m-%d")
+    return formatted_date, formatted_tomorrow
 
 def convert_to_firestore_timestamp(date_str):
     # Parse the string to a datetime object
