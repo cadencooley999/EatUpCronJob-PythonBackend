@@ -7,9 +7,8 @@ import concurrent.futures
 from datetime import datetime, timedelta
 from collections import defaultdict
 from openStatusScrape import *
-from menuScrape import getDailyMenu
+from menuScrape import getCommonsDailyMenu, getHarrisDailyMenu
 from MenuItem import MenuItem
-from menuScrape import getDailyHarrisMenu
 from firebase_admin import credentials, messaging, firestore
 from firebase_admin.exceptions import FirebaseError
 
@@ -27,9 +26,6 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
-open_ref = db.collection("OpenStatus").document("Commons")
-items_menu_ref = db.collection("Items")
 
 def send_notification_batch(notifications):
     """Send multiple notifications in parallel using ThreadPoolExecutor"""
@@ -223,7 +219,6 @@ def todayTomorrowUpdate():
     if count > 0:
         batch.commit()
 
-
 # def commit_in_batches(docs, update_fn):
 #     batch = db.batch()
 #     count = 0
@@ -277,29 +272,23 @@ def mergeItems(list1, list2):
     return list(merged.values())
 
 def updateFirebase(date):
-    items = getDailyMenu(date)
-    # harrisItems = getDailyHarrisMenu(date)
-    # print("Harris Items")
-    # allItems = mergeItems(items1=items, items2=harrisItems)
-    # items = [MenuItem(name="Test", calories=34, period="Breakfast", protein=90, category="MainLine", today='False', tomorrow="True")]
+    itemsC = getCommonsDailyMenu(date)
+    itemsH = getHarrisDailyMenu(date)
+    allItems = mergeItems(items1=itemsC, items2=itemsH)
     batch = db.batch()
     collection_ref = db.collection('Items')
-
-    for index, item in enumerate(items):
+    for index, item in enumerate(allItems):
         doc_ref = collection_ref.document(item.id)
-
         print(item.name)
-
         data = item.toJson()
         del data['today']
+        del data['harrisToday']
         data['lastSeen'] = '2025-05-20T20:01:32Z'
         data['keywords'] = getKeywords(item.name, item.category, item.period)
         batch.set(doc_ref, data, merge=True)
-
         if (index + 1) % 500 == 0:
             batch.commit()
             batch = db.batch()
-
     if (index + 1) % 500 != 0:
         batch.commit()
 
