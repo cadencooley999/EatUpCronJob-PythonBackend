@@ -1,5 +1,9 @@
+import firebase_admin
+from firebase_admin import firestore, credentials, messaging
+import re
 from openStatusScrape import get_dining_api_response
 from MenuItem import MenuItem
+from datetime import datetime
 
 #Step 0 - all menu items with tomorrow = true now is false and today is true
 #Step 1 - ogurl, get periods
@@ -12,7 +16,7 @@ from MenuItem import MenuItem
 locationsMenuCodes = []
 
 Commons = {"LocationCode":"5879069fee596f31b3dc146a", "BreakfastCode":"677d4731e45d4306045bad12", "BrunchCode" : "677d4731e45d4306045bad3b", "LunchCode":"677d4731e45d4306045bad32", "DinnerCode":"677d4731e45d4306045bad22"}
-Harris = {"LocationCode":"58790871ee596f31bcdc174d", "BreakfastCode":"66bbea49e45d4307d4cde15a", "BrunchCode" : "", "LunchCode":"66bbea49e45d4307d4cde146", "DinnerCode":"66bbea49e45d4307d4cde154"}
+Harris = {"LocationCode":"58790871ee596f31bcdc174d", "BreakfastCode":"66bbea49e45d4307d4cde15a", "BrunchCode" : "", "LunchCode":"68a0c417d63ac980fdf1d16f", "DinnerCode":"66bbea49e45d4307d4cde154"}
 TheDen = {"LocationCode":"66bd0cf4e45d4307d4d6a533", "LunchCode":"66bd0cf4e45d4307d4d6a538"}
 nutrientCodes = {'Calories':'682e0cba351d5305de8b5cc9', 'Protein' : '682e0cba351d5305de8b5cca'}
 
@@ -20,33 +24,28 @@ locationsMenuCodes.append(Commons)
 locationsMenuCodes.append(Harris)
 locationsMenuCodes.append(TheDen)
 
-def getOgUrl(date):
-    ogurl = f"https://api.dineoncampus.com/v1/location/5879069fee596f31b3dc146a/periods?platform=0&date={date}"
+def getCommonsPeriodsUrl(date):
+    ogurl = f"https://apiv4.dineoncampus.com/locations/5879069fee596f31b3dc146a/periods/?date={date}"
     return ogurl
 
-def getHarrisOgUrl(date):
-    ogurl = f"https://api.dineoncampus.com/v1/location/5879069fee596f31b3dc146a/periods?platform=0&date={date}"
+def getHarrisPeriodsUrl(date):
+    ogurl = f"https://apiv4.dineoncampus.com/locations/58790871ee596f31bcdc174d/periods/?date={date}"
     return ogurl
 
-def getMenuUrl(perCode, date, locCode='5879069fee596f31b3dc146a'):
-    url = f"https://api.dineoncampus.com/v1/location/{locCode}/periods/{perCode}?platform=0&date={date}"
+def getCommonsMenuUrl(perCode, date, locCode='5879069fee596f31b3dc146a'):
+    url = f"https://apiv4.dineoncampus.com/locations/{locCode}/menu?date={date}&period={perCode}"
     return url
 
 def getHarrisMenuUrl(perCode, date, locCode='58790871ee596f31bcdc174d'):
-    url = f"https://api.dineoncampus.com/v1/location/{locCode}/periods/{perCode}?platform=0&date={date}"
+    url = f"https://apiv4.dineoncampus.com/locations/{locCode}/menu?date={date}&period={perCode}"
     return url
 
-def getMenuFromPeriod(period, date):
+def getCommonsMenuFromPeriod(period, date):
     finalItems = []
-    url = getMenuUrl(period, date)
+    url = getCommonsMenuUrl(period, date)
     success, response = get_dining_api_response(url)
-    # with open('sampleJsonBreakfast2.json') as f:
-    #     BData = json.load(f)
-    # response = {}
-    # response['data'] = BData
-    print(response['data']['menu']['periods']['name'])
-    periodName = response['data']['menu']['periods']['name']
-    cats = response['data']['menu']['periods']['categories']
+    periodName=response['data']['period']['name']
+    cats = response['data']['period']['categories']
     for cat in cats:
         items = []
         for item in cat['items']:
@@ -62,12 +61,8 @@ def getHarrisMenuFromPeriod(period, date):
     finalItems = []
     url = getHarrisMenuUrl(period, date)
     success, response = get_dining_api_response(url)
-    # with open('sampleJsonBreakfast2.json') as f:
-    #     BData = json.load(f)
-    # response = {}
-    # response['data'] = BData
-    periodName = response['data']['menu']['periods']['name']
-    cats = response['data']['menu']['periods']['categories']
+    periodName=response['data']['period']['name']
+    cats = response['data']['period']['categories']
     for cat in cats:
         items = []
         for item in cat['items']:
@@ -79,52 +74,33 @@ def getHarrisMenuFromPeriod(period, date):
         finalItems.extend(items)
     return finalItems
 
-def getHarrisFirstMenu(response):
-    finalItems = []
-    periodName = response['data']['menu']['periods']['name']
-    cats = response['data']['menu']['periods']['categories']
-    for cat in cats:
-        items = []
-        for item in cat['items']:
-            calories = next((nut for nut in item["nutrients"] if 'Calories' in nut['name']), None)
-            protein = next((nut for nut in item["nutrients"] if 'Protein' in nut['name']), None)
-            items.append(
-                MenuItem(name=item['name'], calories=calories['value'], protein=protein['value'], today=False, tomorrow=True, harrisToday=False, harrisTomorrow=True, category=cat["name"], period=periodName)
-            )
-        finalItems.extend(items)
-    return finalItems
+def getHarrisPeriods(date):
+    periods = []
+    success, response = get_dining_api_response(api_url=getHarrisPeriodsUrl(date))
+    periodslist = response['data']['periods']
+    for per in periodslist:
+        periods.append(per['id'])
+    return periods
 
-def getFirstMenu(response):
-    finalItems = []
-    periodName = response['data']['menu']['periods']['name']
-    cats = response['data']['menu']['periods']['categories']
-    for cat in cats:
-        items = []
-        for item in cat['items']:
-            calories = next((nut for nut in item["nutrients"] if 'Calories' in nut['name']), None)
-            protein = next((nut for nut in item["nutrients"] if 'Protein' in nut['name']), None)
-            items.append(
-                MenuItem(name=item['name'], calories=calories['value'], protein=protein['value'], today=False, tomorrow=True, harrisToday=False, harrisTomorrow=False, category=cat["name"], period=periodName)
-            )
-        finalItems.extend(items)
-    return finalItems
 
-def getDailyMenu(date):
+def getCommonsPeriods(date):
+    periods = []
+    success, response = get_dining_api_response(api_url=getCommonsPeriodsUrl(date))
+    periodslist = response['data']['periods']
+    for per in periodslist:
+        periods.append(per['id'])
+    return periods
+
+def getCommonsDailyMenu(date):
     finalItems = []
-    success, response = get_dining_api_response(getOgUrl(date))
-    finalItems.extend(getFirstMenu(response))
-    periods = [per['id'] for per in response['data']['periods']]
-    periods.remove(response['data']['menu']['periods']['id'])
+    periods = getCommonsPeriods(date)
     for per in periods:
-        finalItems.extend(getMenuFromPeriod(per, date))
+        finalItems.extend(getCommonsMenuFromPeriod(per, date))
     return finalItems
 
-def getDailyHarrisMenu(date):
+def getHarrisDailyMenu(date):
     finalItems = []
-    success, response = get_dining_api_response(getHarrisOgUrl(date))
-    finalItems.extend(getHarrisFirstMenu(response))
-    periods = [per['id'] for per in response['data']['periods']]
-    periods.remove(response['data']['menu']['periods']['id'])
+    periods = getHarrisPeriods(date)
     for per in periods:
         finalItems.extend(getHarrisMenuFromPeriod(per, date))
     return finalItems

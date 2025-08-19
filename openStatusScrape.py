@@ -11,7 +11,7 @@ USER_AGENTS = [
 ]
 
 def get_dining_api_response(api_url, max_attempts=5):
-    base_url = "https://dineoncampus.com"
+    base_url = "https://apiv4.dineoncampus.com"
 
     print(f"Attempting to access: {api_url}")
     print(f"Will try up to {max_attempts} attempts")
@@ -34,7 +34,7 @@ def get_dining_api_response(api_url, max_attempts=5):
                 page = context.new_page()
 
                 print("Visiting main website...")
-                page.goto(base_url)
+                page.goto("https://new.dineoncampus.com/txstate")
                 time.sleep(random.uniform(1, 3))
 
                 page.evaluate("""
@@ -107,7 +107,7 @@ def getWeeklyHours(location, date):
     print(f"trying to get hours for {location}")
 
     codes = {'Commons' : '5879069fee596f31b3dc146a', 'Harris' : '58790871ee596f31bcdc174d', 'LBJ Marketplace' : '5f4d9a563a585b186379d814'}
-    url = f'https://api.dineoncampus.com/v1/locations/weekly_schedule?site_id=576837c0e551b89aabc83157&date={date}T05:00:00.000Z'
+    url = f'https://apiv4.dineoncampus.com/locations/weekly_schedule?site_id=576837c0e551b89aabc83157&date={date}'
 
     success, response = get_dining_api_response(url)
 
@@ -124,7 +124,7 @@ def getWeeklyHours(location, date):
     #     data = json.load(sampleHours)
 
     if data:
-        allLocations = data["the_locations"]
+        allLocations = data["theLocations"]
         selectedLocation = []
         for loc in allLocations:
             if loc["id"] == codes[location]:
