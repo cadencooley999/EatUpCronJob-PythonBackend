@@ -354,14 +354,14 @@ def dailyRatingOperation(date):
     harrisCurrentRatings = getHarrisCurrentRating()
     newPastRatings = {'3dayPast': pastRatings["2dayPast"], '2dayPast': pastRatings["1dayPast"], '4dayPast': pastRatings["3dayPast"], '5dayPast': pastRatings["4dayPast"], '1dayPast': currentRatings["dailyAvg"], '6dayPast': pastRatings["5dayPast"]}
     newCurrentRatings = {'numDailyRatings': 0, 'lastRating': '2025-04-19T11:57:52-05:00', 'crowdScore': 0.5, 'tasteScore': 0.5, 'numRatings': 0, 'diningScore': 0.5, 'abundanceScore': 0.5, 'dailyAvg': 0.5}
-    newPastRatings = {'3dayPast': harrisPastRatings["2dayPast"], '2dayPast': harrisPastRatings["1dayPast"], '4dayPast': harrisPastRatings["3dayPast"], '5dayPast': harrisPastRatings["4dayPast"], '1dayPast': harrisCurrentRatings["dailyAvg"], '6dayPast': harrisPastRatings["5dayPast"]}
-    newCurrentRatings = {'numDailyRatings': 0, 'lastRating': '2025-04-19T11:57:52-05:00', 'crowdScore': 0.5, 'tasteScore': 0.5, 'numRatings': 0, 'diningScore': 0.5, 'abundanceScore': 0.5, 'dailyAvg': 0.5}
+    newHarrisPastRatings = {'3dayPast': harrisPastRatings["2dayPast"], '2dayPast': harrisPastRatings["1dayPast"], '4dayPast': harrisPastRatings["3dayPast"], '5dayPast': harrisPastRatings["4dayPast"], '1dayPast': harrisCurrentRatings["dailyAvg"], '6dayPast': harrisPastRatings["5dayPast"]}
+    newHarrisCurrentRatings = {'numDailyRatings': 0, 'lastRating': '2025-04-19T11:57:52-05:00', 'crowdScore': 0.5, 'tasteScore': 0.5, 'numRatings': 0, 'diningScore': 0.5, 'abundanceScore': 0.5, 'dailyAvg': 0.5}
     try: 
         db.collection("Ratings").document("CurrentDay").set({"date" : convert_to_firestore_timestamp(date)})
         db.collection("Ratings").document("CurrentRatings").set(newCurrentRatings)
         db.collection("Ratings").document("WeeklyAvgScores").set(newPastRatings)
-        db.collection("Ratings").document("HarrisCurrentRatings").set(newCurrentRatings)
-        db.collection("Ratings").document("HarrisWeeklyAvgScores").set(newPastRatings)
+        db.collection("Ratings").document("HarrisCurrentRatings").set(newHarrisCurrentRatings)
+        db.collection("Ratings").document("HarrisWeeklyAvgScores").set(newHarrisPastRatings)
     except:
         print("Error with Ratings")
 
