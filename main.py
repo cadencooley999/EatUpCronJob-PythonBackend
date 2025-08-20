@@ -11,6 +11,7 @@ from menuScrape import getCommonsDailyMenu, getHarrisDailyMenu
 from MenuItem import MenuItem
 from firebase_admin import credentials, messaging, firestore
 from firebase_admin.exceptions import FirebaseError
+from zoneinfo import ZoneInfo
 
 # Get the credentials JSON string from the environment variable
 firebase_creds_json = os.getenv("FIREBASE_SECRET_KEY")
@@ -157,8 +158,30 @@ def getPastRatings():
     
     return doc.to_dict()
 
+def getHarrisPastRatings():
+    doc_ref = db.collection("Ratings").document("HarrisWeeklyAvgScores")
+
+    doc = doc_ref.get()
+    if doc.exists:
+        print(f"Document data: {doc.to_dict()}")
+    else:
+        print("No such document!")
+    
+    return doc.to_dict()
+
 def getCurrentRating():
     doc_ref = db.collection("Ratings").document("CurrentRatings")
+
+    doc = doc_ref.get()
+    if doc.exists:
+        print(f"Document data: {doc.to_dict()}")
+    else:
+        print("No such document!")
+
+    return doc.to_dict()
+
+def getHarrisCurrentRating():
+    doc_ref = db.collection("Ratings").document("HarrisCurrentRatings")
 
     doc = doc_ref.get()
     if doc.exists:
@@ -327,12 +350,18 @@ def dailyHoursOperation(date):
 def dailyRatingOperation(date):
     pastRatings = getPastRatings()
     currentRatings = getCurrentRating()
+    harrisPastRatings = getHarrisPastRatings()
+    harrisCurrentRatings = getHarrisCurrentRating()
     newPastRatings = {'3dayPast': pastRatings["2dayPast"], '2dayPast': pastRatings["1dayPast"], '4dayPast': pastRatings["3dayPast"], '5dayPast': pastRatings["4dayPast"], '1dayPast': currentRatings["dailyAvg"], '6dayPast': pastRatings["5dayPast"]}
+    newCurrentRatings = {'numDailyRatings': 0, 'lastRating': '2025-04-19T11:57:52-05:00', 'crowdScore': 0.5, 'tasteScore': 0.5, 'numRatings': 0, 'diningScore': 0.5, 'abundanceScore': 0.5, 'dailyAvg': 0.5}
+    newPastRatings = {'3dayPast': harrisPastRatings["2dayPast"], '2dayPast': harrisPastRatings["1dayPast"], '4dayPast': harrisPastRatings["3dayPast"], '5dayPast': harrisPastRatings["4dayPast"], '1dayPast': harrisCurrentRatings["dailyAvg"], '6dayPast': harrisPastRatings["5dayPast"]}
     newCurrentRatings = {'numDailyRatings': 0, 'lastRating': '2025-04-19T11:57:52-05:00', 'crowdScore': 0.5, 'tasteScore': 0.5, 'numRatings': 0, 'diningScore': 0.5, 'abundanceScore': 0.5, 'dailyAvg': 0.5}
     try: 
         db.collection("Ratings").document("CurrentDay").set({"date" : convert_to_firestore_timestamp(date)})
         db.collection("Ratings").document("CurrentRatings").set(newCurrentRatings)
         db.collection("Ratings").document("WeeklyAvgScores").set(newPastRatings)
+        db.collection("Ratings").document("HarrisCurrentRatings").set(newCurrentRatings)
+        db.collection("Ratings").document("HarrisWeeklyAvgScores").set(newPastRatings)
     except:
         print("Error with Ratings")
 
@@ -356,7 +385,7 @@ def dailyOperation():
         print('Error with hours')
 
 def dateIterator():
-    today = datetime.now()
+    today = datetime.now(ZoneInfo('America/Chicago'))
     timewewant = today
     formatted_date = timewewant.strftime("%Y-%m-%d")
     formatted_tomorrow = (today + timedelta(hours=24)).strftime("%Y-%m-%d")
