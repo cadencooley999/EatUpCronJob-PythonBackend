@@ -385,10 +385,13 @@ def dailyOperation():
         print('Error with hours')
 
 def dateIterator():
+    print("first datetime:", datetime.now())
     today = datetime.now(ZoneInfo('America/Chicago'))
+    print(today)
     timewewant = today
     formatted_date = timewewant.strftime("%Y-%m-%d")
     formatted_tomorrow = (today + timedelta(hours=24)).strftime("%Y-%m-%d")
+    print(formatted_date)
     return formatted_date, formatted_tomorrow
 
 def convert_to_firestore_timestamp(date_str):
