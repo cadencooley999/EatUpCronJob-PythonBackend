@@ -102,7 +102,7 @@ def send_notifications():
             title = f"Item: {item_name} is available today!"
             body = "Come check it out!"
         else:
-            title = f"{len(available_favorites)} of your favorites are available today!"
+            title = f"{len(available_favorites)} of your favorites are available at Commons today!"
             item_names = [today_item_ids[item_id].get('name', 'Unknown Item') for item_id in available_favorites[:3]]
             body = f"{', '.join(item_names[:2])}"
             if len(item_names) > 2:
@@ -132,6 +132,8 @@ def send_notifications():
     
     end_time = time.time()
     print(f"Execution completed in {end_time - start_time:.2f} seconds")
+
+    
 
 def getKeywords(str1, str2, str3):
     def generate_prefixes(text):
@@ -397,7 +399,7 @@ def dateIterator():
 def convert_to_firestore_timestamp(date_str):
     # Parse the string to a datetime object
     dt = datetime.strptime(date_str, "%Y-%m-%d")
-
+    dt = dt.replace(tzinfo=ZoneInfo('America/Chicago'))  # Explicitly set timezone
     # Firestore can accept Python datetime objects directly
     return dt
 
