@@ -34,7 +34,7 @@ def get_dining_api_response(api_url, max_attempts=5):
                 page = context.new_page()
 
                 print("Visiting main website...")
-                page.goto(base_url)
+                page.goto("https://dineoncampus.com/txstate")
                 time.sleep(random.uniform(1, 3))
 
                 page.evaluate("""

@@ -69,9 +69,9 @@ def send_notifications():
     harris_items_snapshot = today_items_ref.get()
     harris_item_ids = {doc.id: doc.to_dict() for doc in harris_items_snapshot}
     
-    print(f"Items available today at commons: {len(today_item_ids)}")
+    print(f"Items available today at Commons: {len(today_item_ids)}")
 
-    print(f"Items available today at harris: {len(harris_item_ids)}")
+    print(f"Items available today at Harris: {len(harris_item_ids)}")
     
     if not today_item_ids and not harris_item_ids:
         print("No items available today, skipping notifications")
@@ -111,7 +111,7 @@ def send_notifications():
                 title = f"Item: {item_name} is available at Commons today!"
                 body = "Come check it out!"
             else:
-                title = f"{len(available_favorites)} of your favorites are available at Commons today!"
+                title = f"Commons has {len(available_favorites)} of your favorites available today!"
                 item_names = [today_item_ids[item_id].get('name', 'Unknown Item') for item_id in available_favorites[:3]]
                 body = f"{', '.join(item_names[:2])}"
                 if len(item_names) > 2:
@@ -138,7 +138,7 @@ def send_notifications():
                 title = f"Item: {item_name} is available at Harris today!"
                 body = "Come check it out!"
             else:
-                title = f"{len(harris_available_favorites)} of your favorites are available at Harris today!"
+                title = f"Harris has {len(harris_available_favorites)} of your favorites available today!"
                 item_names = [harris_item_ids[item_id].get('name', 'Unknown Item') for item_id in harris_available_favorites[:3]]
                 body = f"{', '.join(item_names[:2])}"
                 if len(item_names) > 2:
@@ -171,9 +171,7 @@ def send_notifications():
         send_notification_batch(harris_notifications)
 
     end_time = time.time()
-    print(f"Execution completed in {end_time - start_time:.2f} seconds")
-
-    
+    print(f"Execution completed in {end_time - start_time:.2f} seconds")  
 
 def getKeywords(str1, str2, str3):
     def generate_prefixes(text):
