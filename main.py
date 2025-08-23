@@ -64,10 +64,16 @@ def send_notifications():
     today_items_ref = db.collection('Items').where('today', '==', 'True')
     today_items_snapshot = today_items_ref.get()
     today_item_ids = {doc.id: doc.to_dict() for doc in today_items_snapshot}
+
+    harris_items_ref = db.collection('Items').where('harrisToday', '==', 'True')
+    harris_items_snapshot = today_items_ref.get()
+    harris_item_ids = {doc.id: doc.to_dict() for doc in harris_items_snapshot}
     
-    print(f"Items available today: {len(today_item_ids)}")
+    print(f"Items available today at commons: {len(today_item_ids)}")
+
+    print(f"Items available today at harris: {len(harris_item_ids)}")
     
-    if not today_item_ids:
+    if not today_item_ids and not harris_item_ids:
         print("No items available today, skipping notifications")
         return
     
@@ -76,60 +82,94 @@ def send_notifications():
     users_snapshot = users_ref.get()
     
     # 3. Prepare notifications for all eligible users
-    notifications = []
+    commons_notifications = []
+    harris_notifications = []
     user_count = 0
 
     for user_doc in users_snapshot:
         user_data = user_doc.to_dict()
         user_id = user_doc.id
 
-        if 'fcmToken' not in user_data or 'favorites' not in user_data or user_data.get('dailyFavsNotificationsEnabled') is not True:
+        if 'fcmToken' not in user_data or 'favorites' not in user_data or user_data.get('dailyFavsNotificationsEnabled') is not True or user_data.get('dailyHarrisFavsNotificationsEnabled') is not True:
             continue
         
         user_token = user_data['fcmToken']
         favorite_items = user_data.get('favorites', [])
         
         available_favorites = [item_id for item_id in favorite_items if item_id in today_item_ids]
+        harris_available_favorites = [item_id for item_id in favorite_items if item_id in harris_item_ids]
 
-        if not available_favorites:
+        if not available_favorites and not harris_available_favorites:
             continue
             
         user_count += 1
         
         # Construct notification message
-        if len(available_favorites) == 1:
-            item_name = today_item_ids[available_favorites[0]].get('name', 'Unknown Item')
-            title = f"Item: {item_name} is available today!"
-            body = "Come check it out!"
-        else:
-            title = f"{len(available_favorites)} of your favorites are available at Commons today!"
-            item_names = [today_item_ids[item_id].get('name', 'Unknown Item') for item_id in available_favorites[:3]]
-            body = f"{', '.join(item_names[:2])}"
-            if len(item_names) > 2:
-                body += f" and {len(available_favorites) - 2} more!"
+        if user_data.get("dailyFavsNotificationsEnabled") is True:
+            if len(available_favorites) == 1:
+                item_name = today_item_ids[available_favorites[0]].get('name', 'Unknown Item')
+                title = f"Item: {item_name} is available at Commons today!"
+                body = "Come check it out!"
+            else:
+                title = f"{len(available_favorites)} of your favorites are available at Commons today!"
+                item_names = [today_item_ids[item_id].get('name', 'Unknown Item') for item_id in available_favorites[:3]]
+                body = f"{', '.join(item_names[:2])}"
+                if len(item_names) > 2:
+                    body += f" and {len(available_favorites) - 2} more!"
         
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title=title,
-                body=body
-            ),
-            data={
-                'type': 'favorite_items_available',
-                'available_favorites': ','.join(available_favorites),
-                'count': str(len(available_favorites))
-            },
-            token=user_token
-        )
+            message = messaging.Message(
+                notification=messaging.Notification(
+                    title=title,
+                    body=body
+                ),
+                data={
+                    'type': 'favorite_items_available',
+                    'available_favorites': ','.join(available_favorites),
+                    'count': str(len(available_favorites))
+                },
+                token=user_token
+            )
         
-        notifications.append(message)
+            commons_notifications.append(message)
+
+        if user_data.get("dailyHarrisFavsNotificationsEnabled") is True:
+            if len(harris_available_favorites) == 1:
+                item_name = harris_item_ids[harris_available_favorites[0]].get('name', 'Unknown Item')
+                title = f"Item: {item_name} is available at Harris today!"
+                body = "Come check it out!"
+            else:
+                title = f"{len(harris_available_favorites)} of your favorites are available at Harris today!"
+                item_names = [harris_item_ids[item_id].get('name', 'Unknown Item') for item_id in harris_available_favorites[:3]]
+                body = f"{', '.join(item_names[:2])}"
+                if len(item_names) > 2:
+                    body += f" and {len(harris_available_favorites) - 2} more!"
+        
+            message = messaging.Message(
+                notification=messaging.Notification(
+                    title=title,
+                    body=body
+                ),
+                data={
+                    'type': 'favorite_items_available',
+                    'available_favorites': ','.join(harris_available_favorites),
+                    'count': str(len(harris_available_favorites))
+                },
+                token=user_token
+            )
+        
+            harris_notifications.append(message)
     
     print(f"Found {user_count} users with favorites available today")
     
     # 4. Send all notifications in parallel
-    if notifications:
-        print(f"Sending {len(notifications)} notifications...")
-        send_notification_batch(notifications)
-    
+    if commons_notifications:
+        print(f"Sending {len(commons_notifications)} notifications...")
+        send_notification_batch(commons_notifications)
+
+    if harris_notifications:
+        print(f"Sending {len(harris_notifications)} notifications...")
+        send_notification_batch(harris_notifications)
+
     end_time = time.time()
     print(f"Execution completed in {end_time - start_time:.2f} seconds")
 
