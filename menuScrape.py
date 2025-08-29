@@ -44,8 +44,8 @@ def getCommonsMenuFromPeriod(period, date):
     finalItems = []
     url = getCommonsMenuUrl(period, date)
     success, response = get_dining_api_response(url)
-    periodName = response['data']['period']['name']
-    cats = response['data']['period']['categories']
+    periodName = response['period']['name']
+    cats = response['period']['categories']
     for cat in cats:
         items = []
         for item in cat['items']:
@@ -61,8 +61,8 @@ def getHarrisMenuFromPeriod(period, date):
     finalItems = []
     url = getHarrisMenuUrl(period, date)
     success, response = get_dining_api_response(url)
-    periodName = response['data']['period']['name']
-    cats = response['data']['period']['categories']
+    periodName = response['period']['name']
+    cats = response['period']['categories']
     for cat in cats:
         items = []
         for item in cat['items']:
@@ -77,7 +77,7 @@ def getHarrisMenuFromPeriod(period, date):
 def getHarrisPeriods(date):
     periods = []
     success, response = get_dining_api_response(api_url=getHarrisPeriodsUrl(date))
-    periodslist = response['data']['periods']
+    periodslist = response['periods']
     for per in periodslist:
         periods.append(per['id'])
     return periods
@@ -86,7 +86,7 @@ def getHarrisPeriods(date):
 def getCommonsPeriods(date):
     periods = []
     success, response = get_dining_api_response(api_url=getCommonsPeriodsUrl(date))
-    periodslist = response['data']['periods']
+    periodslist = response['periods']
     for per in periodslist:
         periods.append(per['id'])
     return periods
