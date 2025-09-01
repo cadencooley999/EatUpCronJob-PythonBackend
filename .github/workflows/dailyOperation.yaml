@@ -26,8 +26,17 @@ jobs:
 
       - name: Install Playwright browsers
         run: playwright install
+      
+      - name: Debug connectivity
+        run: |
+          echo "Runner public IP:"
+          curl -s https://ifconfig.me
+          echo ""
+          echo "Testing connection to dineoncampus..."
+          curl -I https://new.dineoncampus.com || true
 
       - name: Run Python script
         env:
           FIREBASE_SECRET_KEY: ${{ secrets.FIREBASE_SECRET_KEY }}
         run: python main.py
+

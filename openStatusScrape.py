@@ -191,7 +191,7 @@ def get_dining_api_response(api_url: str, max_attempts: int = 5, timeout: int = 
         headers["User-Agent"] = random.choice(USER_AGENTS)
 
         try:
-            with httpx.Client(timeout=timeout, http2=True, follow_redirects=True) as client:
+            with httpx.Client(timeout=timeout, http2=False, follow_redirects=True) as client:
                 resp = client.get(api_url, headers=headers)
 
             if resp.status_code == 200:
