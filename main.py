@@ -245,12 +245,10 @@ def setWeeklyHours(location, date):
 
 def todayTomorrowUpdate():
     docs = db.collection('Items').where('today', '==', 'True').where('tomorrow', '==', 'False').stream()
-    print(len(docs), "items where today == true and tomorrow == false")
+    print(len(list(docs)), "items where today == true and tomorrow == false")
     batch = db.batch()
     count = 0
     total_updated = 0
-
-    print("First TT")
 
     for doc in docs:
         batch.update(doc.reference, {'today': 'False'})
@@ -267,7 +265,7 @@ def todayTomorrowUpdate():
 
     docs = db.collection('Items').where('tomorrow', '==', 'True').stream()
 
-    print(len(docs), "items where tomorrow == true")
+    print(len(list(docs)), "items where tomorrow == true")
 
     for doc in docs:
         batch.update(doc.reference, {
@@ -293,7 +291,7 @@ def todayTomorrowUpdate():
     
     docs = db.collection('Items').where('harrisToday', '==', 'True').where('harrisTomorrow', '==', 'False').stream()
 
-    print(len(docs), "items where harrisToday == true and harrisTomorrow == false")
+    print(len(list(docs)), "items where harrisToday == true and harrisTomorrow == false")
 
     for doc in docs:
         batch.update(doc.reference, {
@@ -314,7 +312,7 @@ def todayTomorrowUpdate():
 
     docs = db.collection('Items').where('harrisTomorrow', '==', 'True').stream()
 
-    print(len(docs), "items where harrisTomorrow == true")
+    print(len(list(docs)), "items where harrisTomorrow == true")
 
     for doc in docs:
         batch.update(doc.reference, {
@@ -364,17 +362,17 @@ def updateFirebase(date):
     for index, item in enumerate(allItems):
         doc_ref = collection_ref.document(item.id)
         print(item.name)
-        data = item.toJson()
-        del data['today']
-        del data['harrisToday']
-        data['lastSeen'] = '2025-05-20T20:01:32Z'
-        data['keywords'] = getKeywords(item.name, item.category, item.period)
-        batch.set(doc_ref, data, merge=True)
-        if (index + 1) % 500 == 0:
-            batch.commit()
-            batch = db.batch()
-    if (index + 1) % 500 != 0:
-        batch.commit()
+        # data = item.toJson()
+        # del data['today']
+        # del data['harrisToday']
+        # data['lastSeen'] = '2025-05-20T20:01:32Z'
+        # data['keywords'] = getKeywords(item.name, item.category, item.period)
+        # batch.set(doc_ref, data, merge=True)
+        # if (index + 1) % 500 == 0:
+        #     batch.commit()
+        #     batch = db.batch()
+    # if (index + 1) % 500 != 0:
+    #     batch.commit()
 
 def dailyMenuOperation(date):
     try: 
@@ -449,4 +447,6 @@ def convert_to_firestore_timestamp(date_str):
     return dt
 
 
-dailyOperation()
+# dailyOperation()
+
+updateFirebase("2025-09-02")

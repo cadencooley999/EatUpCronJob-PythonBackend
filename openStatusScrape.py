@@ -182,9 +182,13 @@ def get_dining_api_response(api_url: str, max_attempts: int = 5, timeout: int = 
     base_headers = {
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "en-US,en;q=0.9",
-        "Origin": "https://new.dineoncampus.com",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
         "Referer": "https://new.dineoncampus.com/",
+        "Origin": "https://new.dineoncampus.com",
+        "Connection": "keep-alive"
     }
+
 
     for attempt in range(1, max_attempts + 1):
         headers = base_headers.copy()
