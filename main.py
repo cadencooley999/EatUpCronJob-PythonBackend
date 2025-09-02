@@ -245,6 +245,7 @@ def setWeeklyHours(location, date):
 
 def todayTomorrowUpdate():
     docs = db.collection('Items').where('today', '==', 'True').where('tomorrow', '==', 'False').stream()
+    print(len(docs), "items where today == true and tomorrow == false")
     batch = db.batch()
     count = 0
     total_updated = 0
@@ -266,7 +267,7 @@ def todayTomorrowUpdate():
 
     docs = db.collection('Items').where('tomorrow', '==', 'True').stream()
 
-    print("Second TT")
+    print(len(docs), "items where tomorrow == true")
 
     for doc in docs:
         batch.update(doc.reference, {
@@ -285,10 +286,14 @@ def todayTomorrowUpdate():
     # Commit any remaining documents
     if count > 0:
         batch.commit()
+
+    print("Commons Total Today Tomorrow Update:", total_updated)
+
+    total_updated = 0
     
     docs = db.collection('Items').where('harrisToday', '==', 'True').where('harrisTomorrow', '==', 'False').stream()
 
-    print("Third TT")
+    print(len(docs), "items where harrisToday == true and harrisTomorrow == false")
 
     for doc in docs:
         batch.update(doc.reference, {
@@ -309,7 +314,7 @@ def todayTomorrowUpdate():
 
     docs = db.collection('Items').where('harrisTomorrow', '==', 'True').stream()
 
-    print("Fourth TT")
+    print(len(docs), "items where harrisTomorrow == true")
 
     for doc in docs:
         batch.update(doc.reference, {
@@ -328,6 +333,8 @@ def todayTomorrowUpdate():
     # Commit any remaining documents
     if count > 0:
         batch.commit()
+
+    print("Harris Total Today Tomorrow Update:", total_updated)
 
 def mergeItems(list1, list2):
     merged = {}
