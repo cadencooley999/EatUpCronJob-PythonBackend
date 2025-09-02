@@ -167,10 +167,6 @@
 import httpx
 import random
 import time
-import ssl
-
-ssl_context = ssl.create_default_context()
-ssl_context.set_ciphers("DEFAULT:@SECLEVEL=1")  # relax TLS requirements if needed
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -193,13 +189,12 @@ def get_dining_api_response(api_url: str, max_attempts: int = 5, timeout: int = 
         "Connection": "keep-alive"
     }
 
-
     for attempt in range(1, max_attempts + 1):
         headers = base_headers.copy()
         headers["User-Agent"] = random.choice(USER_AGENTS)
 
         try:
-            with httpx.Client(timeout=timeout, http2=False, follow_redirects=True) as client:
+            with httpx.Client(timeout=timeout, http2=True, follow_redirects=True) as client:
                 resp = client.get(api_url, headers=headers)
 
             if resp.status_code == 200:
