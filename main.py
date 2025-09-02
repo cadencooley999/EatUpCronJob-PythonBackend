@@ -362,17 +362,17 @@ def updateFirebase(date):
     for index, item in enumerate(allItems):
         doc_ref = collection_ref.document(item.id)
         print(item.name)
-        # data = item.toJson()
-        # del data['today']
-        # del data['harrisToday']
-        # data['lastSeen'] = '2025-05-20T20:01:32Z'
-        # data['keywords'] = getKeywords(item.name, item.category, item.period)
-        # batch.set(doc_ref, data, merge=True)
-        # if (index + 1) % 500 == 0:
-        #     batch.commit()
-        #     batch = db.batch()
-    # if (index + 1) % 500 != 0:
-    #     batch.commit()
+        data = item.toJson()
+        del data['today']
+        del data['harrisToday']
+        data['lastSeen'] = '2025-05-20T20:01:32Z'
+        data['keywords'] = getKeywords(item.name, item.category, item.period)
+        batch.set(doc_ref, data, merge=True)
+        if (index + 1) % 500 == 0:
+            batch.commit()
+            batch = db.batch()
+    if (index + 1) % 500 != 0:
+        batch.commit()
 
 def dailyMenuOperation(date):
     try: 
@@ -447,6 +447,6 @@ def convert_to_firestore_timestamp(date_str):
     return dt
 
 
-# dailyOperation()
+dailyOperation()
 
-updateFirebase("2025-09-02")
+# updateFirebase("2025-09-02")
