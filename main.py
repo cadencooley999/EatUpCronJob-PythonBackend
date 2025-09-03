@@ -244,91 +244,80 @@ def setWeeklyHours(location, date):
         print("Error with hours")
 
 def todayTomorrowUpdate():
-    docs = db.collection('Items').where('today', '==', 'True').where('tomorrow', '==', 'False').stream()
+    # --- Commons ---
+    docs = db.collection('Items').where(filter=FieldFilter('today', '==', 'True')).where(filter=FieldFilter('tomorrow', '==', 'False')).stream()
     print(len(list(docs)), "items where today == true and tomorrow == false")
+
     batch = db.batch()
     count = 0
     total_updated = 0
 
+    # Reset stream (you consumed docs with list() above)
+    docs = db.collection('Items').where(filter=FieldFilter('today', '==', 'True')).where(filter=FieldFilter('tomorrow', '==', 'False')).stream()
     for doc in docs:
         batch.update(doc.reference, {'today': 'False'})
         count += 1
         total_updated += 1
-        
         if count == 500:
             batch.commit()
             batch = db.batch()
             count = 0
-    
     if count > 0:
         batch.commit()
 
-    docs = db.collection('Items').where('tomorrow', '==', 'True').stream()
+    # Reset batch + counter for next phase
+    batch = db.batch()
+    count = 0
 
+    docs = db.collection('Items').where(filter=FieldFilter('tomorrow', '==', 'True')).stream()
     print(len(list(docs)), "items where tomorrow == true")
-
+    docs = db.collection('Items').where(filter=FieldFilter('tomorrow', '==', 'True')).stream()
     for doc in docs:
-        batch.update(doc.reference, {
-            'tomorrow': 'False',
-            'today': 'True'
-        })
+        batch.update(doc.reference, {'tomorrow': 'False', 'today': 'True'})
         count += 1
         total_updated += 1
-
-        # Commit in batches of 500
         if count == 500:
             batch.commit()
             batch = db.batch()
             count = 0
-
-    # Commit any remaining documents
     if count > 0:
         batch.commit()
 
     print("Commons Total Today Tomorrow Update:", total_updated)
 
+    # --- Harris ---
     total_updated = 0
-    
-    docs = db.collection('Items').where('harrisToday', '==', 'True').where('harrisTomorrow', '==', 'False').stream()
+    batch = db.batch()
+    count = 0
 
+    docs = db.collection('Items').where(filter=FieldFilter('harrisToday', '==', 'True')).where(filter=FieldFilter('harrisTomorrow', '==', 'False')).stream()
     print(len(list(docs)), "items where harrisToday == true and harrisTomorrow == false")
-
+    docs = db.collection('Items').where(filter=FieldFilter('harrisToday', '==', 'True')).where(filter=FieldFilter('harrisTomorrow', '==', 'False')).stream()
     for doc in docs:
-        batch.update(doc.reference, {
-            'today': 'False'
-        })
+        batch.update(doc.reference, {'harrisToday': 'False'})
         count += 1
         total_updated += 1
-
-        # Commit in batches of 500
         if count == 500:
             batch.commit()
             batch = db.batch()
             count = 0
-
-    # Commit any remaining documents
     if count > 0:
         batch.commit()
 
-    docs = db.collection('Items').where('harrisTomorrow', '==', 'True').stream()
+    batch = db.batch()
+    count = 0
 
+    docs = db.collection('Items').where(filter=FieldFilter('harrisTomorrow', '==', 'True')).stream()
     print(len(list(docs)), "items where harrisTomorrow == true")
-
+    docs = db.collection('Items').where(filter=FieldFilter('harrisTomorrow', '==', 'True')).stream()
     for doc in docs:
-        batch.update(doc.reference, {
-            'harrisTomorrow': 'False',
-            'harrisToday': 'True'
-        })
+        batch.update(doc.reference, {'harrisTomorrow': 'False', 'harrisToday': 'True'})
         count += 1
         total_updated += 1
-
-        # Commit in batches of 500
         if count == 500:
             batch.commit()
             batch = db.batch()
             count = 0
-
-    # Commit any remaining documents
     if count > 0:
         batch.commit()
 
