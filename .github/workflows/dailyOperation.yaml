@@ -37,7 +37,7 @@ jobs:
           
           echo ""
           echo "Testing API endpoint (verbose)..."
-          curl -v https://apiv4.dineoncampus.com/locations/58790871ee596f31bcdc174d/menu?date=2025-09-03&period=68b6f10d5123013c821f6212 || true
+          curl -v https://apiv4.dineoncampus.com/locations/58790871ee596f31bcdc174d/menu?date=2025-09-05&period=68b9945cc359f1e0d318feb9 || true
 
       - name: Run Python script
         env:

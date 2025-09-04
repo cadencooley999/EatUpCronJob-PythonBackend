@@ -169,15 +169,30 @@ import random
 import time
 
 USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    # Chrome on Windows
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.111 Safari/537.36",
+    # Firefox on Windows
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:117.0) Gecko/20100101 Firefox/117.0",
+    # Edge on Windows
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.111 Safari/537.36 Edg/116.0.1938.81",
+    # Safari on macOS
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15",
+    # Chrome on macOS
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.111 Safari/537.36",
+    # Chrome on Android
+    "Mozilla/5.0 (Linux; Android 13; Pixel 7 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.111 Mobile Safari/537.36",
+    # Safari on iPhone
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+    # Firefox on Android
+    "Mozilla/5.0 (Android 13; Mobile; rv:117.0) Gecko/117.0 Firefox/117.0",
+    # Edge on Android
+    "Mozilla/5.0 (Linux; Android 13; SM-G991U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.111 Mobile Safari/537.36 EdgA/116.0.1938.81"
 ]
 
 def get_dining_api_response(api_url: str, max_attempts: int = 5, timeout: int = 20):
-    """Fetch JSON from DineOnCampus API with retries.
-       Returns (success: bool, response: dict | None)
+    """
+    Fetch JSON from DineOnCampus API with retries.
+    Returns (success: bool, response: dict | None)
     """
     base_headers = {
         "Accept": "application/json, text/plain, */*",
@@ -189,23 +204,41 @@ def get_dining_api_response(api_url: str, max_attempts: int = 5, timeout: int = 
         "Connection": "keep-alive"
     }
 
+    http2_enabled = True
+
+    print("attempting to fetch: ", api_url)
+
     for attempt in range(1, max_attempts + 1):
         headers = base_headers.copy()
         headers["User-Agent"] = random.choice(USER_AGENTS)
 
         try:
-            with httpx.Client(timeout=timeout, http2=True, follow_redirects=True) as client:
+            with httpx.Client(timeout=timeout, http2=http2_enabled, follow_redirects=True) as client:
                 resp = client.get(api_url, headers=headers)
 
             if resp.status_code == 200:
-                return True, resp.json()
+                try:
+                    return True, resp.json()
+                except ValueError:
+                    print(f"❌ Attempt {attempt}: Invalid JSON response")
+                    return False, None
 
-            print(f"❌ Attempt {attempt}: {resp.status_code} - {resp.text[:100]}")
+            # Server responded but not 200
+            print(f"❌ Attempt {attempt}: HTTP {resp.status_code} - {resp.text[:100]}")
 
-        except Exception as e:
+            # Optional: if 422 or other throttling, consider switching HTTP/2 off
+            if resp.status_code in {422, 429, 503}:
+                http2_enabled = False
+
+        except (httpx.ConnectError, httpx.ReadTimeout, httpx.RemoteProtocolError) as e:
             print(f"⚠️ Attempt {attempt} failed: {e}")
+            # If a connection reset happens, try disabling HTTP/2 next time
+            if "ConnectionResetError" in str(e) or "104" in str(e):
+                http2_enabled = False
 
-        time.sleep(min(10, 2 ** attempt + random.random()))  # backoff
+        # Exponential backoff with jitter
+        sleep_time = min(10, 2 ** attempt + random.random())
+        time.sleep(sleep_time)
 
     return False, None
 

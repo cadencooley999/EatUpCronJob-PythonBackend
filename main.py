@@ -10,6 +10,7 @@ from openStatusScrape import *
 from menuScrape import getCommonsDailyMenu, getHarrisDailyMenu
 from MenuItem import MenuItem
 from firebase_admin import credentials, messaging, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 from firebase_admin.exceptions import FirebaseError
 from zoneinfo import ZoneInfo
 
@@ -244,84 +245,57 @@ def setWeeklyHours(location, date):
         print("Error with hours")
 
 def todayTomorrowUpdate():
-    # --- Commons ---
-    docs = db.collection('Items').where(filter=FieldFilter('today', '==', 'True')).where(filter=FieldFilter('tomorrow', '==', 'False')).stream()
-    print(len(list(docs)), "items where today == true and tomorrow == false")
+    rules = [
+        # --- Commons ---
+        {
+            "label": "Commons today->False",
+            "filters": [("today", "==", True), ("tomorrow", "==", True)],
+            "updates": {"today": False}
+        },
+        {
+            "label": "Commons tomorrow->today",
+            "filters": [("tomorrow", "==", True)],
+            "updates": {"tomorrow": False, "today": True}
+        },
+        # --- Harris ---
+        {
+            "label": "Harris harrisToday->False",
+            "filters": [("harrisToday", "==", True), ("harrisTomorrow", "==", False)],
+            "updates": {"harrisToday": False}
+        },
+        {
+            "label": "Harris harrisTomorrow->harrisToday",
+            "filters": [("harrisTomorrow", "==", True)],
+            "updates": {"harrisTomorrow": False, "harrisToday": True}
+        }
+    ]
 
-    batch = db.batch()
-    count = 0
-    total_updated = 0
+    for rule in rules:
+        query = db.collection("Items")
+        for field, op, value in rule["filters"]:
+            query = query.where(filter=FieldFilter(field, op, value))
+        
+        docs = list(query.stream())
+        print(len(docs), "items for", rule["label"])
 
-    # Reset stream (you consumed docs with list() above)
-    docs = db.collection('Items').where(filter=FieldFilter('today', '==', 'True')).where(filter=FieldFilter('tomorrow', '==', 'False')).stream()
-    for doc in docs:
-        batch.update(doc.reference, {'today': 'False'})
-        count += 1
-        total_updated += 1
-        if count == 500:
+        batch = db.batch()
+        count = 0
+        total_updated = 0
+
+        for doc in docs:
+            batch.update(doc.reference, rule["updates"])
+            count += 1
+            total_updated += 1
+
+            if count == 500:
+                batch.commit()
+                batch = db.batch()
+                count = 0
+
+        if count > 0:
             batch.commit()
-            batch = db.batch()
-            count = 0
-    if count > 0:
-        batch.commit()
 
-    # Reset batch + counter for next phase
-    batch = db.batch()
-    count = 0
-
-    docs = db.collection('Items').where(filter=FieldFilter('tomorrow', '==', 'True')).stream()
-    print(len(list(docs)), "items where tomorrow == true")
-    docs = db.collection('Items').where(filter=FieldFilter('tomorrow', '==', 'True')).stream()
-    for doc in docs:
-        batch.update(doc.reference, {'tomorrow': 'False', 'today': 'True'})
-        count += 1
-        total_updated += 1
-        if count == 500:
-            batch.commit()
-            batch = db.batch()
-            count = 0
-    if count > 0:
-        batch.commit()
-
-    print("Commons Total Today Tomorrow Update:", total_updated)
-
-    # --- Harris ---
-    total_updated = 0
-    batch = db.batch()
-    count = 0
-
-    docs = db.collection('Items').where(filter=FieldFilter('harrisToday', '==', 'True')).where(filter=FieldFilter('harrisTomorrow', '==', 'False')).stream()
-    print(len(list(docs)), "items where harrisToday == true and harrisTomorrow == false")
-    docs = db.collection('Items').where(filter=FieldFilter('harrisToday', '==', 'True')).where(filter=FieldFilter('harrisTomorrow', '==', 'False')).stream()
-    for doc in docs:
-        batch.update(doc.reference, {'harrisToday': 'False'})
-        count += 1
-        total_updated += 1
-        if count == 500:
-            batch.commit()
-            batch = db.batch()
-            count = 0
-    if count > 0:
-        batch.commit()
-
-    batch = db.batch()
-    count = 0
-
-    docs = db.collection('Items').where(filter=FieldFilter('harrisTomorrow', '==', 'True')).stream()
-    print(len(list(docs)), "items where harrisTomorrow == true")
-    docs = db.collection('Items').where(filter=FieldFilter('harrisTomorrow', '==', 'True')).stream()
-    for doc in docs:
-        batch.update(doc.reference, {'harrisTomorrow': 'False', 'harrisToday': 'True'})
-        count += 1
-        total_updated += 1
-        if count == 500:
-            batch.commit()
-            batch = db.batch()
-            count = 0
-    if count > 0:
-        batch.commit()
-
-    print("Harris Total Today Tomorrow Update:", total_updated)
+        print(f"Total updated for {rule['label']}: {total_updated}")
 
 def mergeItems(list1, list2):
     merged = {}
