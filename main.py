@@ -249,23 +249,23 @@ def todayTomorrowUpdate():
         # --- Commons ---
         {
             "label": "Commons today->False",
-            "filters": [("today", "==", True), ("tomorrow", "==", True)],
+            "filters": [("today", "==", "True"), ("tomorrow", "==", "True")],
             "updates": {"today": False}
         },
         {
             "label": "Commons tomorrow->today",
-            "filters": [("tomorrow", "==", True)],
+            "filters": [("tomorrow", "==", "True")],
             "updates": {"tomorrow": False, "today": True}
         },
         # --- Harris ---
         {
             "label": "Harris harrisToday->False",
-            "filters": [("harrisToday", "==", True), ("harrisTomorrow", "==", False)],
+            "filters": [("harrisToday", "==", "True"), ("harrisTomorrow", "==", "False")],
             "updates": {"harrisToday": False}
         },
         {
             "label": "Harris harrisTomorrow->harrisToday",
-            "filters": [("harrisTomorrow", "==", True)],
+            "filters": [("harrisTomorrow", "==", "True")],
             "updates": {"harrisTomorrow": False, "harrisToday": True}
         }
     ]
