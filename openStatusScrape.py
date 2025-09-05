@@ -167,6 +167,7 @@
 import httpx
 import random
 import time
+import traceback
 
 USER_AGENTS = [
     # Chrome on Windows
@@ -189,9 +190,9 @@ USER_AGENTS = [
     "Mozilla/5.0 (Linux; Android 13; SM-G991U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.111 Mobile Safari/537.36 EdgA/116.0.1938.81"
 ]
 
-def get_dining_api_response(api_url: str, max_attempts: int = 5, timeout: int = 20):
+def get_dining_api_response(api_url: str, max_attempts: int = 5, min_delay: float = 0.5, max_delay: float = 1.5):
     """
-    Fetch JSON from DineOnCampus API with retries.
+    Fetch JSON from DineOnCampus API with retries, backoff, and per-request random delay.
     Returns (success: bool, response: dict | None)
     """
     base_headers = {
@@ -201,12 +202,13 @@ def get_dining_api_response(api_url: str, max_attempts: int = 5, timeout: int = 
         "Pragma": "no-cache",
         "Referer": "https://new.dineoncampus.com/",
         "Origin": "https://new.dineoncampus.com",
-        "Connection": "keep-alive"
+        "Connection": "close",  # avoid connection pool issues
     }
 
-    http2_enabled = True
+    timeout = httpx.Timeout(connect=10.0, read=60.0)
+    http2_enabled = False  # force HTTP/1.1 for stability on Actions
 
-    print("attempting to fetch: ", api_url)
+    print("attempting to fetch:", api_url)
 
     for attempt in range(1, max_attempts + 1):
         headers = base_headers.copy()
@@ -216,29 +218,30 @@ def get_dining_api_response(api_url: str, max_attempts: int = 5, timeout: int = 
             with httpx.Client(timeout=timeout, http2=http2_enabled, follow_redirects=True) as client:
                 resp = client.get(api_url, headers=headers)
 
+            print(f"Attempt {attempt} → HTTP {resp.status_code}, version={resp.http_version}")
+
             if resp.status_code == 200:
                 try:
                     return True, resp.json()
                 except ValueError:
                     print(f"❌ Attempt {attempt}: Invalid JSON response")
                     return False, None
+            else:
+                print(f"❌ Attempt {attempt}: HTTP {resp.status_code} - {resp.text[:200]}")
 
-            # Server responded but not 200
-            print(f"❌ Attempt {attempt}: HTTP {resp.status_code} - {resp.text[:100]}")
+        except Exception as e:
+            print(f"⚠️ Attempt {attempt} failed with {type(e).__name__}: {e}")
+            traceback.print_exc()
 
-            # Optional: if 422 or other throttling, consider switching HTTP/2 off
-            if resp.status_code in {422, 429, 503}:
-                http2_enabled = False
-
-        except (httpx.ConnectError, httpx.ReadTimeout, httpx.RemoteProtocolError) as e:
-            print(f"⚠️ Attempt {attempt} failed: {e}")
-            # If a connection reset happens, try disabling HTTP/2 next time
-            if "ConnectionResetError" in str(e) or "104" in str(e):
-                http2_enabled = False
-
-        # Exponential backoff with jitter
-        sleep_time = min(10, 2 ** attempt + random.random())
+        # exponential backoff + random jitter before retry
+        sleep_time = min(30, 2 ** attempt + random.uniform(0.5, 2.0))
+        print(f"⏳ Sleeping {sleep_time:.1f}s before retry...")
         time.sleep(sleep_time)
+
+    # final random delay after a successful call before next request
+    final_delay = random.uniform(min_delay, max_delay)
+    print(f"⏳ Waiting {final_delay:.2f}s before next request to avoid throttling...")
+    time.sleep(final_delay)
 
     return False, None
 

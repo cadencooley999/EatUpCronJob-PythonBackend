@@ -250,23 +250,23 @@ def todayTomorrowUpdate():
         {
             "label": "Commons today->False",
             "filters": [("today", "==", "True"), ("tomorrow", "==", "True")],
-            "updates": {"today": False}
+            "updates": {"today": "False"}
         },
         {
             "label": "Commons tomorrow->today",
             "filters": [("tomorrow", "==", "True")],
-            "updates": {"tomorrow": False, "today": True}
+            "updates": {"tomorrow": "False", "today": "True"}
         },
         # --- Harris ---
         {
             "label": "Harris harrisToday->False",
             "filters": [("harrisToday", "==", "True"), ("harrisTomorrow", "==", "False")],
-            "updates": {"harrisToday": False}
+            "updates": {"harrisToday": "False"}
         },
         {
             "label": "Harris harrisTomorrow->harrisToday",
             "filters": [("harrisTomorrow", "==", "True")],
-            "updates": {"harrisTomorrow": False, "harrisToday": True}
+            "updates": {"harrisTomorrow": "False", "harrisToday": "True"}
         }
     ]
 
@@ -319,23 +319,26 @@ def updateFirebase(date):
     print("Commons: ",len(itemsC))
     print("Harris: ",len(itemsH))
     allItems = mergeItems(list1=itemsC, list2=itemsH)
+    for i in allItems:
+        i.tomorrow = str(i.tomorrow)
+        i.harrisTomorrow = str(i.harrisTomorrow)
     print("all items length: ", len(allItems))
-    batch = db.batch()
-    collection_ref = db.collection('Items')
-    for index, item in enumerate(allItems):
-        doc_ref = collection_ref.document(item.id)
-        print(item.name)
-        data = item.toJson()
-        del data['today']
-        del data['harrisToday']
-        data['lastSeen'] = '2025-05-20T20:01:32Z'
-        data['keywords'] = getKeywords(item.name, item.category, item.period)
-        batch.set(doc_ref, data, merge=True)
-        if (index + 1) % 500 == 0:
-            batch.commit()
-            batch = db.batch()
-    if (index + 1) % 500 != 0:
-        batch.commit()
+    # batch = db.batch()
+    # collection_ref = db.collection('Items')
+    # for index, item in enumerate(allItems):
+    #     doc_ref = collection_ref.document(item.id)
+    #     print(item.name)
+    #     data = item.toJson()
+    #     del data['today']
+    #     del data['harrisToday']
+    #     data['lastSeen'] = '2025-05-20T20:01:32Z'
+    #     data['keywords'] = getKeywords(item.name, item.category, item.period)
+    #     batch.set(doc_ref, data, merge=True)
+    #     if (index + 1) % 500 == 0:
+    #         batch.commit()
+    #         batch = db.batch()
+    # if (index + 1) % 500 != 0:
+    #     batch.commit()
 
 def dailyMenuOperation(date):
     try: 
@@ -410,6 +413,6 @@ def convert_to_firestore_timestamp(date_str):
     return dt
 
 
-dailyOperation()
+# dailyOperation()
 
-# updateFirebase("2025-09-02")
+updateFirebase("2025-09-05")
