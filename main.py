@@ -413,6 +413,6 @@ def convert_to_firestore_timestamp(date_str):
     return dt
 
 
-# dailyOperation()
+dailyOperation()
 
-updateFirebase("2025-09-05")
+# updateFirebase("2025-09-05")

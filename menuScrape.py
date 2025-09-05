@@ -4,6 +4,8 @@ import re
 from openStatusScrape import get_dining_api_response
 from MenuItem import MenuItem
 from datetime import datetime
+import time
+import random
 
 #Step 0 - all menu items with tomorrow = true now is false and today is true
 #Step 1 - ogurl, get periods
@@ -96,6 +98,7 @@ def getCommonsDailyMenu(date):
     periods = getCommonsPeriods(date)
     for per in periods:
         finalItems.extend(getCommonsMenuFromPeriod(per, date))
+        time.sleep(random.uniform(0.5, 2.0)) 
     return finalItems
 
 def getHarrisDailyMenu(date):
@@ -103,4 +106,5 @@ def getHarrisDailyMenu(date):
     periods = getHarrisPeriods(date)
     for per in periods:
         finalItems.extend(getHarrisMenuFromPeriod(per, date))
+        time.sleep(random.uniform(0.5, 2.0)) 
     return finalItems
