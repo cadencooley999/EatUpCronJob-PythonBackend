@@ -205,7 +205,7 @@ def get_dining_api_response(api_url: str, max_attempts: int = 5, min_delay: floa
         "Connection": "close",  # avoid connection pool issues
     }
 
-    timeout = httpx.Timeout(connect=10.0, read=60.0)
+    timeout = httpx.Timeout(connect=10.0, read=60.0,write=10.0, pool=10.0)
     http2_enabled = False  # force HTTP/1.1 for stability on Actions
 
     print("attempting to fetch:", api_url)
