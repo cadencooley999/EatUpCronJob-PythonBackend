@@ -67,7 +67,7 @@ def send_notifications():
     today_item_ids = {doc.id: doc.to_dict() for doc in today_items_snapshot}
 
     harris_items_ref = db.collection('Items').where('harrisToday', '==', 'True')
-    harris_items_snapshot = today_items_ref.get()
+    harris_items_snapshot = harris_items_ref.get()
     harris_item_ids = {doc.id: doc.to_dict() for doc in harris_items_snapshot}
     
     print(f"Items available today at Commons: {len(today_item_ids)}")
@@ -91,7 +91,7 @@ def send_notifications():
         user_data = user_doc.to_dict()
         user_id = user_doc.id
 
-        if 'fcmToken' not in user_data or 'favorites' not in user_data or user_data.get('dailyFavsNotificationsEnabled') is not True or user_data.get('dailyHarrisFavsNotificationsEnabled') is not True:
+        if 'fcmToken' not in user_data or 'favorites' not in user_data or (user_data.get('dailyFavsNotificationsEnabled') is not True and user_data.get('dailyHarrisFavsNotificationsEnabled') is not True):
             continue
         
         user_token = user_data['fcmToken']
@@ -248,23 +248,23 @@ def todayTomorrowUpdate():
     rules = [
         # --- Commons ---
         {
-            "label": "Commons today->False",
+            "label": "Commons today->False, tom false",
             "filters": [("today", "==", "True"), ("tomorrow", "==", "True")],
             "updates": {"today": "False"}
         },
         {
-            "label": "Commons tomorrow->today",
+            "label": "Commons tomorrow->true",
             "filters": [("tomorrow", "==", "True")],
             "updates": {"tomorrow": "False", "today": "True"}
         },
         # --- Harris ---
         {
-            "label": "Harris harrisToday->False",
+            "label": "Harris harrisToday->True, tom false",
             "filters": [("harrisToday", "==", "True"), ("harrisTomorrow", "==", "False")],
             "updates": {"harrisToday": "False"}
         },
         {
-            "label": "Harris harrisTomorrow->harrisToday",
+            "label": "Harris harrisTomorrow->True",
             "filters": [("harrisTomorrow", "==", "True")],
             "updates": {"harrisTomorrow": "False", "harrisToday": "True"}
         }
@@ -323,22 +323,22 @@ def updateFirebase(date):
         i.tomorrow = str(i.tomorrow)
         i.harrisTomorrow = str(i.harrisTomorrow)
     print("all items length: ", len(allItems))
-    # batch = db.batch()
-    # collection_ref = db.collection('Items')
-    # for index, item in enumerate(allItems):
-    #     doc_ref = collection_ref.document(item.id)
-    #     print(item.name)
-    #     data = item.toJson()
-    #     del data['today']
-    #     del data['harrisToday']
-    #     data['lastSeen'] = '2025-05-20T20:01:32Z'
-    #     data['keywords'] = getKeywords(item.name, item.category, item.period)
-    #     batch.set(doc_ref, data, merge=True)
-    #     if (index + 1) % 500 == 0:
-    #         batch.commit()
-    #         batch = db.batch()
-    # if (index + 1) % 500 != 0:
-    #     batch.commit()
+    batch = db.batch()
+    collection_ref = db.collection('Items')
+    for index, item in enumerate(allItems):
+        doc_ref = collection_ref.document(item.id)
+        print(item.name)
+        data = item.toJson()
+        del data['today']
+        del data['harrisToday']
+        data['lastSeen'] = '2025-05-20T20:01:32Z'
+        data['keywords'] = getKeywords(item.name, item.category, item.period)
+        batch.set(doc_ref, data, merge=True)
+        if (index + 1) % 500 == 0:
+            batch.commit()
+            batch = db.batch()
+    if (index + 1) % 500 != 0:
+        batch.commit()
 
 def dailyMenuOperation(date):
     try: 
