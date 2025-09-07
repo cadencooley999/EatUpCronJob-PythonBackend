@@ -327,7 +327,7 @@ def updateFirebase(date):
     collection_ref = db.collection('Items')
     for index, item in enumerate(allItems):
         doc_ref = collection_ref.document(item.id)
-        print(item.name)
+        # print(item.name)
         data = item.toJson()
         del data['today']
         del data['harrisToday']
