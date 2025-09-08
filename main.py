@@ -248,25 +248,25 @@ def todayTomorrowUpdate():
     rules = [
         # --- Commons ---
         {
-            "label": "Commons today->False, tom false",
-            "filters": [("today", "==", "True"), ("tomorrow", "==", "True")],
-            "updates": {"today": "False"}
-        },
-        {
             "label": "Commons tomorrow->true",
             "filters": [("tomorrow", "==", "True")],
             "updates": {"tomorrow": "False", "today": "True"}
         },
-        # --- Harris ---
         {
-            "label": "Harris harrisToday->True, tom false",
-            "filters": [("harrisToday", "==", "True"), ("harrisTomorrow", "==", "False")],
-            "updates": {"harrisToday": "False"}
+            "label": "Commons today->False, tom false",
+            "filters": [("today", "==", "True"), ("tomorrow", "==", "False")],
+            "updates": {"today": "False"}
         },
+        # --- Harris ---
         {
             "label": "Harris harrisTomorrow->True",
             "filters": [("harrisTomorrow", "==", "True")],
             "updates": {"harrisTomorrow": "False", "harrisToday": "True"}
+        },
+        {
+            "label": "Harris harrisToday->True, tom false",
+            "filters": [("harrisToday", "==", "True"), ("harrisTomorrow", "==", "False")],
+            "updates": {"harrisToday": "False"}
         }
     ]
 
