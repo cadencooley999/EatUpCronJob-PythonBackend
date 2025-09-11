@@ -95,6 +95,7 @@ def send_notifications():
             continue
         
         user_token = user_data['fcmToken']
+        print(user_token)
         favorite_items = user_data.get('favorites', [])
         
         available_favorites = [item_id for item_id in favorite_items if item_id in today_item_ids]
@@ -413,6 +414,8 @@ def convert_to_firestore_timestamp(date_str):
     return dt
 
 
-dailyOperation()
+# dailyOperation()
 
 # updateFirebase("2025-09-05")
+
+send_notifications()
