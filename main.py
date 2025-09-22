@@ -415,18 +415,18 @@ def convert_to_firestore_timestamp(date_str):
     return dt
 
 
-# dailyOperation()
+dailyOperation()
 
-def test_case_scraping(date="2025-09-21"):
-    itemsC = getCommonsDailyMenu(date)
-    itemsH = getHarrisDailyMenu(date)
-    print("Commons: ",len(itemsC))
-    print("Harris: ",len(itemsH))
-    allItems = mergeItems(list1=itemsC, list2=itemsH)
-    for i in allItems:
-        print(i.name)
+# def test_case_scraping(date="2025-09-21"):
+#     itemsC = getCommonsDailyMenu(date)
+#     itemsH = getHarrisDailyMenu(date)
+#     print("Commons: ",len(itemsC))
+#     print("Harris: ",len(itemsH))
+#     allItems = mergeItems(list1=itemsC, list2=itemsH)
+#     for i in allItems:
+#         print(i.name)
 
-test_case_scraping()
+# test_case_scraping()
 
 # updateFirebase("2025-09-05")
 
