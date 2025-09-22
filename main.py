@@ -6,7 +6,8 @@ import os
 import concurrent.futures
 from datetime import datetime, timedelta
 from collections import defaultdict
-from openStatusScrape import *
+# from openStatusScrape import *
+from newOpenStatusScrape import *
 from menuScrape import getCommonsDailyMenu, getHarrisDailyMenu
 from MenuItem import MenuItem
 from firebase_admin import credentials, messaging, firestore

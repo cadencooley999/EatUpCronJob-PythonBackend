@@ -94,17 +94,85 @@ def getCommonsPeriods(date):
     return periods
 
 def getCommonsDailyMenu(date):
-    finalItems = []
+    final_items = []
     periods = getCommonsPeriods(date)
-    for per in periods:
-        finalItems.extend(getCommonsMenuFromPeriod(per, date))
-        time.sleep(random.uniform(0.5, 2.0)) 
-    return finalItems
+    # for per in periods:
+    #     finalItems.extend(getCommonsMenuFromPeriod(per, date))
+    final_items = getCommonsItemsUsingPeriodList(periods, date)
+    return final_items
 
 def getHarrisDailyMenu(date):
-    finalItems = []
+    final_items = []
     periods = getHarrisPeriods(date)
-    for per in periods:
-        finalItems.extend(getHarrisMenuFromPeriod(per, date))
-        time.sleep(random.uniform(0.5, 2.0)) 
-    return finalItems
+    # for per in periods:
+    #     finalItems.extend(getHarrisMenuFromPeriod(per, date))
+    final_items = getHarrisItemsUsingPeriodList(periods, date)
+    return final_items
+
+def getHarrisItemsUsingPeriodList(periods, date):
+    final_items = []
+    url_list = [getHarrisMenuUrl(per, date) for per in periods]
+    success_overall, results = fetch_multiple_dining_json(url_list)
+
+    if not success_overall:
+        print("Failed to fetch menus")
+        return []
+
+    for url, (success, response) in results.items():
+        if success:
+            periodName = response['period']['name']
+            for cat in response['period']['categories']:
+                for item in cat['items']:
+                    calories = next((nut for nut in item["nutrients"] if 'Calories' in nut['name']), None)
+                    protein = next((nut for nut in item["nutrients"] if 'Protein' in nut['name']), None)
+                    final_items.append(
+                        MenuItem(
+                            name=item['name'],
+                            calories=calories['value'] if calories else None,
+                            protein=protein['value'] if protein else None,
+                            today=False,
+                            tomorrow=False,
+                            harrisToday=False,
+                            harrisTomorrow=True,
+                            category=cat["name"],
+                            period=periodName
+                        )
+                    )
+        else:
+            print(f"Error fetching menu for {url}")
+
+    return final_items
+
+def getCommonsItemsUsingPeriodList(periods, date):
+    final_items = []
+    url_list = [getCommonsMenuUrl(per, date) for per in periods]
+    success_overall, results = fetch_multiple_dining_json(url_list)
+
+    if not success_overall:
+        print("Failed to fetch menus")
+        return []
+
+    for url, (success, response) in results.items():
+        if success:
+            periodName = response['period']['name']
+            for cat in response['period']['categories']:
+                for item in cat['items']:
+                    calories = next((nut for nut in item["nutrients"] if 'Calories' in nut['name']), None)
+                    protein = next((nut for nut in item["nutrients"] if 'Protein' in nut['name']), None)
+                    final_items.append(
+                        MenuItem(
+                            name=item['name'],
+                            calories=calories['value'] if calories else None,
+                            protein=protein['value'] if protein else None,
+                            today=False,
+                            tomorrow=True,
+                            harrisToday=False,
+                            harrisTomorrow=False,
+                            category=cat["name"],
+                            period=periodName
+                        )
+                    )
+        else:
+            print(f"Error fetching menu for {url}")
+
+    return final_items
