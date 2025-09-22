@@ -1,7 +1,7 @@
 import firebase_admin
 from firebase_admin import firestore, credentials, messaging
 import re
-from openStatusScrape import get_dining_api_response
+from newOpenStatusScrape import get_dining_api_response, fetch_multiple_dining_json
 from MenuItem import MenuItem
 from datetime import datetime
 import time
