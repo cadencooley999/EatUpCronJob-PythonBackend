@@ -33,7 +33,7 @@ def get_dining_api_response(api_url):
                 data = json.loads(body)
                 return True, data
             except Exception:
-                print(f"[!] Failed to parse JSON for {url}")
+                print(f"[!] Failed to parse JSON for {api_url}")
                 print("Body (first 300 chars):", body[:300])
                 return False, None
 
