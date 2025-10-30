@@ -4,10 +4,7 @@ on:
   schedule: 
     - cron: '0 10 * * *'
   workflow_dispatch:
-
-env:
-  RUNNER_TOOL_CACHE: /Users/cadencooley/actions-runner/_toolcache
-
+  
 jobs:
   run-daily-script:
     runs-on: [self-hosted, macOS, ARM64]
@@ -15,18 +12,6 @@ jobs:
     steps: 
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Ensure toolcache exists
-        run: mkdir -p $RUNNER_TOOL_CACHE
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          architecture: 'arm64'
-          cache: 'pip'  # caches pip packages in HOME
-        env:
-            RUNNER_TOOL_CACHE: /Users/cadencooley/actions-runner/_toolcache
 
       - name: Install dependencies
         run: |
