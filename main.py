@@ -415,7 +415,7 @@ def convert_to_firestore_timestamp(date_str):
     return dt
 
 
-# dailyOperation()
+dailyOperation()
 
 def test_case_scraping(date="2025-10-28"):
     itemsC = getCommonsDailyMenu(date)
@@ -426,7 +426,7 @@ def test_case_scraping(date="2025-10-28"):
     for i in allItems:
         print(i.name)
 
-test_case_scraping()
+# test_case_scraping()
 
 # updateFirebase("2025-09-05")
 
