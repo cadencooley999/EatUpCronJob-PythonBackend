@@ -25,6 +25,8 @@ jobs:
           python-version: '3.11'
           architecture: 'arm64'
           cache: 'pip'  # caches pip packages in HOME
+        env:
+            RUNNER_TOOL_CACHE: /Users/cadencooley/actions-runner/_toolcache
 
       - name: Install dependencies
         run: |
