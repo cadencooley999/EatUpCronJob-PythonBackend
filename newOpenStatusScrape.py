@@ -1,76 +1,46 @@
 from playwright.sync_api import sync_playwright
 import json
 
-# def get_dining_api_response(api_url):
-#     """
-#     Fetch JSON from a DineOnCampus API URL using Playwright.
-#     Returns: (True, data) on success, (False, None) on failure.
-#     """
-#     ROOT = "https://new.dineoncampus.com/"
-
-#     try:
-#         with sync_playwright() as p:
-#             browser = p.chromium.launch(headless=False)
-#             context = browser.new_context()
-#             page = context.new_page()
-
-#             # Visit root once to solve Cloudflare
-#             page.goto(ROOT, wait_until="networkidle", timeout=60000)
-
-#             # Fetch API URL inside the browser context
-#             js = f"""
-#                 () => fetch("{api_url}", {{
-#                     method: "GET",
-#                     headers: {{
-#                         "accept": "application/json, text/plain, */*"
-#                     }}
-#                 }}).then(r => r.text())
-#             """
-#             body = page.evaluate(js)
-
-#             # Parse JSON
-#             try:
-#                 data = json.loads(body)
-#                 return True, data
-#             except Exception:
-#                 print(f"[!] Failed to parse JSON for {api_url}")
-#                 print("Body (first 300 chars):", body[:300])
-#                 return False, None
-
-#     except Exception as e:
-#         print(f"[!] Exception fetching {api_url}: {e}")
-#         return False, None
 def get_dining_api_response(api_url):
+    """
+    Fetch JSON from a DineOnCampus API URL using Playwright.
+    Returns: (True, data) on success, (False, None) on failure.
+    """
     ROOT = "https://new.dineoncampus.com/"
 
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
-            context = browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                           "AppleWebKit/537.36 (KHTML, like Gecko) "
-                           "Chrome/120.0.0.0 Safari/537.36"
-            )
+            browser = p.chromium.launch(headless=False)
+            context = browser.new_context()
             page = context.new_page()
 
-            # Visit homepage to get Cloudflare cookies
-            print("Visiting root to get Cloudflare cookies...")
-            page.goto(ROOT, wait_until="domcontentloaded", timeout=60000)
+            # Visit root once to solve Cloudflare
+            page.goto(ROOT, wait_until="networkidle", timeout=60000)
 
-            print("Fetching API using Playwright context.request ...")
-            response = context.request.get(api_url, headers={"accept": "application/json, text/plain, */*"})
-            print("Status:", response.status)
+            # Fetch API URL inside the browser context
+            js = f"""
+                () => fetch("{api_url}", {{
+                    method: "GET",
+                    headers: {{
+                        "accept": "application/json, text/plain, */*"
+                    }}
+                }}).then(r => r.text())
+            """
+            body = page.evaluate(js)
 
-            if response.status != 200:
-                print("Body preview:", response.text()[:300])
+            # Parse JSON
+            try:
+                data = json.loads(body)
+                return True, data
+            except Exception:
+                print(f"[!] Failed to parse JSON for {url}")
+                print("Body (first 300 chars):", body[:300])
                 return False, None
-
-            data = response.json()
-            return True, data
 
     except Exception as e:
         print(f"[!] Exception fetching {api_url}: {e}")
         return False, None
+
 
 def getWeeklyHours(location, date):
 
