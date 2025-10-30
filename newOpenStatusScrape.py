@@ -47,30 +47,25 @@ def get_dining_api_response(api_url):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
             context = browser.new_context(
-                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                            "AppleWebKit/537.36 (KHTML, like Gecko) "
-                           "Chrome/120.0.0.0 Safari/537.36",
-                viewport={"width": 1280, "height": 800}
+                           "Chrome/120.0.0.0 Safari/537.36"
             )
             page = context.new_page()
 
-            # Visit homepage to get CF cookies
+            # Visit homepage to get Cloudflare cookies
+            print("Visiting root to get Cloudflare cookies...")
             page.goto(ROOT, wait_until="domcontentloaded", timeout=60000)
 
-            # Fetch API with cookies attached
-            js = f"""
-                async () => {{
-                    const r = await fetch("{api_url}", {{
-                        method: "GET",
-                        headers: {{
-                            "accept": "application/json, text/plain, */*"
-                        }}
-                    }});
-                    return await r.text();
-                }}
-            """
-            body = page.evaluate(js)
-            data = json.loads(body)
+            print("Fetching API using Playwright context.request ...")
+            response = context.request.get(api_url, headers={"accept": "application/json, text/plain, */*"})
+            print("Status:", response.status)
+
+            if response.status != 200:
+                print("Body preview:", response.text()[:300])
+                return False, None
+
+            data = response.json()
             return True, data
 
     except Exception as e:
