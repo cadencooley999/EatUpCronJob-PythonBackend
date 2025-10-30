@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  RUNNER_TOOL_CACHE: $HOME/actions-runner/_toolcache  # avoids /Users/runner
+  RUNNER_TOOL_CACHE: /Users/cadencooley/actions-runner/_toolcache
 
 jobs:
   run-daily-script:
@@ -15,6 +15,9 @@ jobs:
     steps: 
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Ensure toolcache exists
+        run: mkdir -p $RUNNER_TOOL_CACHE
 
       - name: Set up Python
         uses: actions/setup-python@v4
