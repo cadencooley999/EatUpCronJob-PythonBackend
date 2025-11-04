@@ -92,6 +92,8 @@ def send_notifications():
         user_data = user_doc.to_dict()
         user_id = user_doc.id
 
+        print("USER DATA:", user_data)
+
         if 'fcmToken' not in user_data or 'favorites' not in user_data or (user_data.get('dailyFavsNotificationsEnabled') is not True and user_data.get('dailyHarrisFavsNotificationsEnabled') is not True):
             continue
         
@@ -101,6 +103,8 @@ def send_notifications():
         
         available_favorites = [item_id for item_id in favorite_items if item_id in today_item_ids]
         harris_available_favorites = [item_id for item_id in favorite_items if item_id in harris_item_ids]
+
+        print("Harris available favorites: ", harris_available_favorites)
 
         if not available_favorites and not harris_available_favorites:
             continue
