@@ -132,6 +132,10 @@ def send_notifications():
                 },
                 token=user_token
             )
+
+            print("User token", user_token)
+            print("title", title)
+            print("body", body)
         
             commons_notifications.append(message)
 
@@ -159,6 +163,10 @@ def send_notifications():
                 },
                 token=user_token
             )
+
+            print("User token", user_token)
+            print("title", title)
+            print("body", body)
         
             harris_notifications.append(message)
     
