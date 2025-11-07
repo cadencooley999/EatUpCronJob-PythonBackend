@@ -92,7 +92,6 @@ def send_notifications():
         user_data = user_doc.to_dict()
         user_id = user_doc.id
 
-        print("USER DATA:", user_data)
 
         if 'fcmToken' not in user_data or 'favorites' not in user_data or (user_data.get('dailyFavsNotificationsEnabled') is not True and user_data.get('dailyHarrisFavsNotificationsEnabled') is not True):
             continue
@@ -113,6 +112,7 @@ def send_notifications():
         
         # Construct notification message
         if user_data.get("dailyFavsNotificationsEnabled") is True:
+            print("USER DATA:", user_data)
             if len(available_favorites) == 1:
                 item_name = today_item_ids[available_favorites[0]].get('name', 'Unknown Item')
                 title = f"Item: {item_name} is available at Commons today!"
@@ -144,6 +144,7 @@ def send_notifications():
             commons_notifications.append(message)
 
         if user_data.get("dailyHarrisFavsNotificationsEnabled") is True:
+            print("USER DATA:", user_data)
             if len(harris_available_favorites) == 1:
                 item_name = harris_item_ids[harris_available_favorites[0]].get('name', 'Unknown Item')
                 title = f"Item: {item_name} is available at Harris today!"
