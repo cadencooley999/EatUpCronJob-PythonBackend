@@ -104,19 +104,11 @@ def send_notifications():
         user_data = user_doc.to_dict()
         user_id = user_doc.id
 
-        print("in user docs")
-        print(user_data)
-
-        if user_data['username'] != 'Caden19':
-            continue
-
         if 'fcmToken' not in user_data or 'favorites' not in user_data or (user_data.get('dailyFavsNotificationsEnabled') is not True and user_data.get('dailyHarrisFavsNotificationsEnabled') is not True):
             continue
         
         user_token = user_data['fcmToken']
-        print(user_token, user_data["username"])
         favorite_items = user_data.get('favorites', [])
-        print(favorite_items)
         
         available_favorites = [item_id for item_id in favorite_items if item_id in today_item_ids]
         harris_available_favorites = [item_id for item_id in favorite_items if item_id in harris_item_ids]
@@ -163,7 +155,6 @@ def send_notifications():
             commons_notifications.append(message)
 
         if user_data.get("dailyHarrisFavsNotificationsEnabled") is True:
-            print("USER DATA:", user_data)
             if len(harris_available_favorites) == 1:
                 item_name = harris_item_ids[harris_available_favorites[0]].get('name', 'Unknown Item')
                 title = f"Item: {item_name} is available at Harris today!"
@@ -447,7 +438,7 @@ def convert_to_firestore_timestamp(date_str):
     return dt
 
 
-# dailyOperation()
+dailyOperation()
 
 def test_case_scraping(date="2025-10-28"):
     itemsC = getCommonsDailyMenu(date)
@@ -462,4 +453,4 @@ def test_case_scraping(date="2025-10-28"):
 
 # updateFirebase("2025-09-05")
 
-send_notifications()
+# send_notifications()
