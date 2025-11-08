@@ -92,6 +92,8 @@ def send_notifications():
         user_data = user_doc.to_dict()
         user_id = user_doc.id
 
+        print("in user docs")
+
         if user_data['username'] != 'Caden19':
             continue
 
