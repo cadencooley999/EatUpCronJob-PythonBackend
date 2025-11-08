@@ -14,7 +14,7 @@ from firebase_admin import credentials, messaging, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 from firebase_admin.exceptions import FirebaseError
 from zoneinfo import ZoneInfo
-from firebase_admin import FieldFilter, Or
+from google.cloud.firestore_v1.base_query import FieldFilter, Or
 
 # Get the credentials JSON string from the environment variable
 firebase_creds_json = os.getenv("FIREBASE_SECRET_KEY")
@@ -100,7 +100,7 @@ def send_notifications():
     commons_notifications = []
     harris_notifications = []
     user_count = 0
-    
+
     for user_doc in users_snapshot:
         user_data = user_doc.to_dict()
         user_id = user_doc.id
