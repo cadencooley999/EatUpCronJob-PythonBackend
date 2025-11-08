@@ -84,7 +84,6 @@ def send_notifications():
     users_ref = db.collection('Users')
     query = (
         users_ref
-        .where('favorites', '!=', [])       # grab only users where favoritesArray is *not empty*
         .where('fcmToken', '!=', '') 
         .where( filter=Or(
             [
