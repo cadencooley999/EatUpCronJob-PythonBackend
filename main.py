@@ -14,6 +14,7 @@ from firebase_admin import credentials, messaging, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 from firebase_admin.exceptions import FirebaseError
 from zoneinfo import ZoneInfo
+from firebase_admin import FieldFilter, Or
 
 # Get the credentials JSON string from the environment variable
 firebase_creds_json = os.getenv("FIREBASE_SECRET_KEY")
@@ -81,18 +82,31 @@ def send_notifications():
     
     # 2. Get all users in one query
     users_ref = db.collection('Users')
-    users_snapshot = users_ref.get()
+    query = (
+        users_ref
+        .where('favorites', '!=', [])       # grab only users where favoritesArray is *not empty*
+        .where('fcmToken', '!=', '') 
+        .where( filter=Or(
+            [
+                FieldFilter('dailyFavsNotificationsEnabled', '==', True),
+                FieldFilter('dailyHarrisFavsNotificationsEnabled', '==', True),
+            ]
+        ))
+    )
+
+    users_snapshot = query.get()
     
     # 3. Prepare notifications for all eligible users
     commons_notifications = []
     harris_notifications = []
     user_count = 0
-
+    
     for user_doc in users_snapshot:
         user_data = user_doc.to_dict()
         user_id = user_doc.id
 
         print("in user docs")
+        print(user_data)
 
         if user_data['username'] != 'Caden19':
             continue
